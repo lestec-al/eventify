@@ -2,10 +2,8 @@ package com.lestec.eventify.data
 
 import android.content.ContentValues
 import android.content.Context
-import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-
 
 class LocalRepo private constructor(context: Context): SQLiteOpenHelper(
     context, "app_db", null, 5
@@ -53,54 +51,6 @@ class LocalRepo private constructor(context: Context): SQLiteOpenHelper(
         db.insert(tableName, null, data)
     }
 
-    private fun <T> getList(
-        tableName: String,
-        b: Boundaries? = null,
-        block: (Cursor) -> T
-    ): List<T> {
-        val list = mutableListOf<T>()
-        if (!db.isOpen) db = this.writableDatabase
-        val cur = db.rawQuery(
-            "SELECT * FROM ${
-                if (b == null) tableName else "$tableName WHERE date BETWEEN ${b.start} AND ${b.end}"
-            }",
-            null
-        )
-        if (cur.moveToFirst()) {
-            do {
-                list.add(block(cur))
-            } while (cur.moveToNext())
-        }
-        cur.close()
-        return list
-    }
-
-    private fun <T> getOne(
-        tableName: String,
-        id: Int,
-        block: (Cursor) -> T
-    ): T? {
-        if (!db.isOpen) db = this.writableDatabase
-        val cur = db.rawQuery("SELECT * FROM $tableName WHERE id = $id", null)
-        return if (cur.moveToFirst()) {
-            val obj = block(cur)
-            cur.close()
-            obj
-        } else {
-            cur.close()
-            null
-        }
-    }
-
-    private fun update(
-        tableName: String,
-        id: Int,
-        data: ContentValues
-    ) {
-        if (!db.isOpen) db = this.writableDatabase
-        db.update(tableName, data, "id = $id", null)
-    }
-
     private fun delete(
         tableName: String,
         id: Int
@@ -124,14 +74,28 @@ class LocalRepo private constructor(context: Context): SQLiteOpenHelper(
         })
     }
 
-    fun getEventsTypes(boundaries: Boundaries? = null): List<EventType> {
-        return getList("eventsTypes", boundaries) {
-            EventType(
-                id = it.getInt(0),
-                color = it.getInt(1),
-                text = it.getString(2)
-            )
+    fun getEventsTypes(b: Boundaries? = null): List<EventType> {
+        val list = mutableListOf<EventType>()
+        if (!db.isOpen) db = this.writableDatabase
+        val cur = db.rawQuery(
+            "SELECT * FROM ${
+                if (b == null) "eventsTypes" else "eventsTypes WHERE date BETWEEN ${b.start} AND ${b.end}"
+            }",
+            null
+        )
+        if (cur.moveToFirst()) {
+            do {
+                list.add(
+                    EventType(
+                        id = cur.getInt(0),
+                        color = cur.getInt(1),
+                        text = cur.getString(2)
+                    )
+                )
+            } while (cur.moveToNext())
         }
+        cur.close()
+        return list
     }
     fun getEventsEntries(b: Boundaries? = null): List<EventEntry> {
         val list = mutableListOf<EventEntry>()
@@ -163,16 +127,12 @@ class LocalRepo private constructor(context: Context): SQLiteOpenHelper(
     }
 
     fun updateEvent(e: EventType) {
-        update("eventsTypes", e.id, ContentValues().apply {
+        val data = ContentValues().apply {
             this.put("color", e.color)
             this.put("text", e.text)
-        })
-    }
-    fun updateEvent(e: EventEntry) {
-        update("eventsEntries", e.id, ContentValues().apply {
-            this.put("typeId", e.typeId)
-            this.put("date", e.date)
-        })
+        }
+        if (!db.isOpen) db = this.writableDatabase
+        db.update("eventsTypes", data, "id = ${e.id}", null)
     }
 
     fun deleteEvent(e: EventType) {
