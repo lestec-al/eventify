@@ -182,7 +182,7 @@ fun CalendarCard(
                                     if (it.isThisMonth) {
                                         Color.Unspecified
                                     } else {
-                                        Color.Unspecified.copy(alpha = 0.5f)
+                                        MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
                                     }
                                 }
                             )
