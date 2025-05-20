@@ -28,22 +28,43 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
     // CardItems
     var eventTypes by mutableStateOf(listOf<EventType>())
         private set
-    fun updateEventTypes() {
+    private fun updateEventTypes() {
         eventTypes = repo.getEventsTypes()
     }
 
-    var editBottomSheetOpen by mutableStateOf(false)
+    var editSheetOpen by mutableStateOf(false)
         private set
-    fun updateEditBottomSheetOpen(value: Boolean) {
-        editBottomSheetOpen = value
+    var editedEventType by mutableStateOf<EventType?>(null)
+        private set
+    fun updateEditSheetOpen(
+        sheetOpen: Boolean,
+        eventType: EventType? = null
+    ) {
+        editSheetOpen = sheetOpen
+        editedEventType = eventType
     }
 
-    fun createEventType(color: Int, text: String) {
-        repo.addEvent(EventType(-1, color, text))
+    fun createEventType(newEventType: EventType) {
+        repo.addEvent(newEventType)
+        updateEventTypes()
+        updateEditSheetOpen(false)
+    }
+
+    fun updateEventType(eventType: EventType) {
+        repo.updateEvent(eventType)
+        updateEventTypes()
+        updateEditSheetOpen(false)
+    }
+
+    fun deleteEventType(eventType: EventType) {
+        repo.deleteEvent(eventType)
+        updateEventTypes()
+        updateEditSheetOpen(false)
     }
 
     fun createEventEntry(eventType: EventType) {
         repo.addEvent(EventEntry(-1, eventType.id, System.currentTimeMillis(), 0, ""))
+        get3MonthsData(today, null)
     }
 
     init {
@@ -52,6 +73,7 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
 
     // Calendar
     val today: Calendar = Calendar.getInstance()
+    private var editedCalendar: Calendar = Calendar.getInstance()
     var currentPage = 1
 
     val weekNames = updateWeekNames()
@@ -86,6 +108,7 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
         pagerState: PagerState?
     ) {
         viewModelScope.launch {
+            editedCalendar = calendar
             // Set month name
             nameOfMonth = DateFormat.format(
                 if ((calendar[Calendar.YEAR] == today[Calendar.YEAR])) "LLLL" else "LLLL yyyy",
@@ -252,5 +275,11 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
             dataForDay = dayObj.listOfStats
             timeForDay = dayObj.timeMills
         }
+    }
+
+    fun deleteEventEntry(eventEntry: EventEntry) {
+        repo.deleteEvent(eventEntry)
+        dataForDay = dataForDay.filter { eventEntry.id != it.id }
+        get3MonthsData(editedCalendar, null)
     }
 }

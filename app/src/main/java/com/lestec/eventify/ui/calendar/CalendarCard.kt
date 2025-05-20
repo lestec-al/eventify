@@ -18,8 +18,8 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ElevatedCard
@@ -35,12 +35,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
-import com.lestec.eventify.R
 import com.lestec.eventify.ui.MainViewModel
 import com.lestec.eventify.ui.upperFirstChar
 import java.util.Calendar
@@ -51,7 +49,6 @@ fun CalendarCard(
     modifier: Modifier,
     vm: MainViewModel
 ) {
-    val context = LocalContext.current
     val itemHeight = gridHeightDp / 6
     val weekDaysNamesHeight = 25.dp
     val pagerState = rememberPagerState(
@@ -88,7 +85,7 @@ fun CalendarCard(
         }
     )
 
-    DayBottomSheet(
+    DaySheet(
         onDismissRequest = {
             vm.setIsShowDayDialog(false)
         },
@@ -103,30 +100,23 @@ fun CalendarCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Info text
-            Column {
-                Text(
-                    text = context.getString(R.string.calendar),
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    text = vm.nameOfMonth.upperFirstChar(),
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
+            Text(
+                text = vm.nameOfMonth.upperFirstChar(),
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                style = MaterialTheme.typography.titleMedium
+            )
             Spacer(Modifier.weight(1f))
             // Set date button
             IconButton(onClick = {
                 vm.setIsDatePickerON(true)
             }) {
-                Icon(Icons.Default.Edit, null)
+                Icon(Icons.Default.EditCalendar, null)
             }
             // Set date now button
             IconButton(onClick = {
                 vm.get3MonthsData(vm.today, pagerState)
             }) {
-                Icon(Icons.Default.DateRange, null)
+                Icon(Icons.Default.CalendarToday, null)
             }
         }
         HorizontalDivider()

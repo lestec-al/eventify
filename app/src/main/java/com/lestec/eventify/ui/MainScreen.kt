@@ -9,15 +9,26 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddBox
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.viewModelFactory
+import com.lestec.eventify.R
 import com.lestec.eventify.ui.calendar.CalendarCard
 import com.lestec.eventify.ui.cards.CardItems
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
 fun MainScreen(
@@ -25,15 +36,32 @@ fun MainScreen(
     vm: MainViewModel
 ) {
     BackHandler(onBack = onBack)
+    val context = LocalContext.current
     val calendarMaxGridHeight = LocalConfiguration.current.screenHeightDp
-    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(text = context.getString(R.string.app_name)) },
+                actions = {
+                    // Add card button
+                    IconButton(onClick = { vm.updateEditSheetOpen(true) }) {
+                        Icon(Icons.Default.AddBox, null)
+                    }
+                },
+                scrollBehavior = scrollBehavior
+            )
+        },
+        modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection)
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            viewModelFactory {  }
             CalendarCard(
                 gridHeightDp = calendarMaxGridHeight / 2,
                 modifier = Modifier.padding(horizontal = 4.dp),

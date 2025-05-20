@@ -1,16 +1,25 @@
 package com.lestec.eventify.ui
 
+import android.widget.Toast
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -28,6 +37,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -37,23 +47,25 @@ import androidx.core.graphics.blue
 import androidx.core.graphics.green
 import androidx.core.graphics.red
 import com.lestec.eventify.R
+import com.lestec.eventify.data.EventType
 import kotlin.random.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditTextSheet(
+fun EditSheet(
     onDismiss: () -> Unit,
-    onSave: (color:Int, text:String) -> Unit
+    onSave: (eventType: EventType) -> Unit,
+    onDelete: () -> Unit,
+    editedEventType: EventType?
 ) {
     val context = LocalContext.current
-    var textValue by remember { mutableStateOf("") }
-    val itemColor = MaterialTheme.colorScheme.primary // ??????
-    val initialColor = remember {
-        Color(Random.nextInt(256), Random.nextInt(256), Random.nextInt(256)).toArgb()
+    var textValue by remember {
+        if (editedEventType != null) mutableStateOf(editedEventType.text) else mutableStateOf("New event")
     }
-    var redColor by remember { mutableIntStateOf(initialColor.red) }
-    var greenColor by remember { mutableIntStateOf(initialColor.green) }
-    var blueColor by remember { mutableIntStateOf(initialColor.blue) }
+    val itemColor = editedEventType?.color?.let { Color(it) } ?: MaterialTheme.colorScheme.primary
+    var redColor by remember { mutableIntStateOf(itemColor.toArgb().red) }
+    var greenColor by remember { mutableIntStateOf(itemColor.toArgb().green) }
+    var blueColor by remember { mutableIntStateOf(itemColor.toArgb().blue) }
     // To separate viewModel ???
     fun updateColor(colorType: Char, color: Float) {
         when (colorType) {
@@ -131,15 +143,67 @@ fun EditTextSheet(
             )
         }
         Spacer(Modifier.height(10.dp))
-        // Ok button
-        Button(
-            onClick = {
-               onSave(getWholeColor().toArgb(), textValue)
-            },
+        // Buttons (save & delete)
+        LazyVerticalGrid(
             modifier = Modifier
-                .padding(horizontal = 10.dp)
+                .padding(5.dp)
                 .fillMaxWidth(),
-            content = { Icon(Icons.Default.Done, null) }
-        )
+            columns = GridCells.Fixed(if (editedEventType != null) 2 else 1)
+        ) {
+            // Delete button
+            if (editedEventType != null) item {
+                Card(
+                    modifier = Modifier
+                        .padding(horizontal = 5.dp)
+                        .fillMaxWidth()
+                        .height(45.dp)
+                        .combinedClickable(
+                            onClick = {
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.long_click_delete_info),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            },
+                            onLongClick = {
+                                onDelete()
+                            }
+                        ),
+                    shape = ButtonDefaults.shape,
+                    colors = CardDefaults.cardColors(
+                        containerColor = itemColor,
+                        contentColor = ButtonDefaults.buttonColors().contentColor
+                    )
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Icon(Icons.Default.Delete, "delete")
+                    }
+                }
+            }
+            // Save button
+            item {
+                Button(
+                    onClick = {
+                        onSave(
+                            EventType(
+                                id = editedEventType?.id ?: -1,
+                                color = getWholeColor().toArgb(),
+                                text = textValue
+                            )
+                        )
+                    },
+                    modifier = Modifier
+                        .padding(horizontal = 5.dp)
+                        .fillMaxWidth()
+                        .height(45.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = itemColor)
+                ) {
+                    Icon(Icons.Default.Done, "save")
+                }
+            }
+        }
     }
 }

@@ -15,3 +15,7 @@ fun Date.formatDate(context: Context): String = DateFormat
 fun Long.formatMillsDate(context: Context): String = DateFormat
     .getMediumDateFormat(context)
     .format(this)
+
+fun Long.formatMillsTime(context: Context): String = DateFormat
+    .getTimeFormat(context)
+    .format(this)

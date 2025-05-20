@@ -103,10 +103,10 @@ class LocalRepo private constructor(context: Context): SQLiteOpenHelper(
 
     private fun delete(
         tableName: String,
-        where: String
+        id: Int
     ) {
         if (!db.isOpen) db = this.writableDatabase
-        db.delete(tableName, where, null)
+        db.delete(tableName, "id = $id", null)
     }
 
 
@@ -175,4 +175,10 @@ class LocalRepo private constructor(context: Context): SQLiteOpenHelper(
         })
     }
 
+    fun deleteEvent(e: EventType) {
+        delete("eventsTypes", e.id)
+    }
+    fun deleteEvent(e: EventEntry) {
+        delete("eventsEntries", e.id)
+    }
 }
