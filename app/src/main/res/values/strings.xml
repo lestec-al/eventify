@@ -1,6 +1,9 @@
 <resources>
-    <string name="app_name">Eventify</string>
+    <string name="app_name" translatable="false">Eventify</string>
+
     <string name="color">Color</string>
-    <string name="long_click_delete_info">Long click to delete</string>
-    <string name="empty_text">It is empty here</string>
+    <string name="long_click_delete_info">Long-press to delete</string>
+    <string name="empty_text">Nothing here yet</string>
+    <string name="event_name">Event name</string>
+    <string name="event_name_error">Enter a name for your event</string>
 </resources>

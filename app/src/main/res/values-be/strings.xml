@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="color">Колер</string>
+    <string name="long_click_delete_info">Трымайце, каб выдаліць</string>
+    <string name="empty_text">Тут пакуль няма нічога</string>
+    <string name="event_name">Назва падзеі</string>
+    <string name="event_name_error">Увядзіце назву падзеі</string>
+</resources>

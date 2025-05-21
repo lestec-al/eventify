@@ -60,12 +60,13 @@ fun EditSheet(
 ) {
     val context = LocalContext.current
     var textValue by remember {
-        if (editedEventType != null) mutableStateOf(editedEventType.text) else mutableStateOf("New event")
+        if (editedEventType != null) mutableStateOf(editedEventType.text) else mutableStateOf("")
     }
     val itemColor = editedEventType?.color?.let { Color(it) } ?: MaterialTheme.colorScheme.primary
     var redColor by remember { mutableIntStateOf(itemColor.toArgb().red) }
     var greenColor by remember { mutableIntStateOf(itemColor.toArgb().green) }
     var blueColor by remember { mutableIntStateOf(itemColor.toArgb().blue) }
+    var textError by remember { mutableStateOf(false) }
     // To separate viewModel ???
     fun updateColor(colorType: Char, color: Float) {
         when (colorType) {
@@ -86,6 +87,16 @@ fun EditSheet(
         OutlinedTextField(
             value = textValue,
             onValueChange = { textValue = it },
+            label = {
+                Text(text = context.getString(R.string.event_name))
+            },
+            supportingText = {
+                Text(
+                    text = if (textError) context.getString(R.string.event_name_error) else "",
+                    color = MaterialTheme.colorScheme.error
+                )
+            },
+            isError = textError,
             modifier = Modifier
                 .padding(horizontal = 10.dp)
                 .fillMaxWidth(),
@@ -187,13 +198,18 @@ fun EditSheet(
             item {
                 Button(
                     onClick = {
-                        onSave(
-                            EventType(
-                                id = editedEventType?.id ?: -1,
-                                color = getWholeColor().toArgb(),
-                                text = textValue
+                        textError = false
+                        if (textValue.isEmpty()) {
+                            textError = true
+                        } else {
+                            onSave(
+                                EventType(
+                                    id = editedEventType?.id ?: -1,
+                                    color = getWholeColor().toArgb(),
+                                    text = textValue
+                                )
                             )
-                        )
+                        }
                     },
                     modifier = Modifier
                         .padding(horizontal = 5.dp)

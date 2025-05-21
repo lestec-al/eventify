@@ -137,6 +137,9 @@ class LocalRepo private constructor(context: Context): SQLiteOpenHelper(
 
     fun deleteEvent(e: EventType) {
         delete("eventsTypes", e.id)
+        // Delete entries for this type
+        if (!db.isOpen) db = this.writableDatabase
+        db.delete("eventsEntries", "typeId = ${e.id}", null)
     }
     fun deleteEvent(e: EventEntry) {
         delete("eventsEntries", e.id)

@@ -54,12 +54,14 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
         repo.updateEvent(eventType)
         updateEventTypes()
         updateEditSheetOpen(false)
+        get3MonthsData(editedCalendar, null)
     }
 
     fun deleteEventType(eventType: EventType) {
         repo.deleteEvent(eventType)
         updateEventTypes()
         updateEditSheetOpen(false)
+        get3MonthsData(editedCalendar, null)
     }
 
     fun createEventEntry(eventType: EventType) {

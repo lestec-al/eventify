@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="color">Цвет</string>
+    <string name="long_click_delete_info">Зажмите, чтобы удалить</string>
+    <string name="empty_text">Здесь пока ничего нет</string>
+    <string name="event_name">Название события</string>
+    <string name="event_name_error">Введите название события</string>
+</resources>
