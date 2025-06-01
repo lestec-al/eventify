@@ -4,6 +4,8 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import org.json.JSONArray
+import org.json.JSONObject
 
 class LocalRepo private constructor(context: Context): SQLiteOpenHelper(
     context, "app_db", null, 5
@@ -40,6 +42,75 @@ class LocalRepo private constructor(context: Context): SQLiteOpenHelper(
     }
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {}
+
+
+    // EXPORT & IMPORT
+    fun export(): JSONArray {
+        if (!db.isOpen) db = this.writableDatabase
+        val array = JSONArray()
+        // Loop
+        for (table in listOf("eventsTypes", "eventsEntries")) {
+            val cur = db.rawQuery("SELECT * FROM $table", null)
+            if (cur.moveToFirst()) {
+                do {
+                    val obj = JSONObject()
+                    // Add to json object
+                    obj.put("id", cur.getInt(0))
+                    obj.put("type", table)
+                    when (table) {
+                        "eventsTypes" -> {
+                            obj.put("color", cur.getInt(1))
+                            obj.put("text", cur.getString(2))
+                        }
+                        "eventsEntries" -> {
+                            obj.put("typeId", cur.getInt(1))
+                            obj.put("date", cur.getLong(2))
+                        }
+                    }
+                    // Add json object to json array
+                    array.put(obj)
+                } while (cur.moveToNext())
+            }
+            cur.close()
+        }
+        return array
+    }
+
+    fun import(data: String): Boolean {
+        if (!db.isOpen) db = this.writableDatabase
+        val oldData = export()
+        clean()
+        return try {
+            val jsonData = JSONArray(data)
+            for (i in 0..<jsonData.length()) {
+                val obj = jsonData.getJSONObject(i)
+                val cv = ContentValues()
+                cv.put("id", obj.getInt("id"))
+                val type = obj.getString("type")
+                when (type) {
+                    "eventsTypes" -> {
+                        cv.put("color", obj.getInt("color"))
+                        cv.put("text", obj.getString("text"))
+                    }
+                    "eventsEntries" -> {
+                        cv.put("typeId", obj.getInt("typeId"))
+                        cv.put("date", obj.getLong("date"))
+                    }
+                }
+                db.insert(type, null, cv)
+            }
+            true
+        } catch (_: Exception) {
+            import(oldData.toString())
+            false
+        }
+    }
+
+    private fun clean() {
+        if (!db.isOpen) db = this.writableDatabase
+        db.execSQL("DELETE FROM eventsTypes")
+        db.execSQL("DELETE FROM eventsEntries")
+    }
 
 
     //

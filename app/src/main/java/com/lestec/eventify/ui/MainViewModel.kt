@@ -1,7 +1,18 @@
 package com.lestec.eventify.ui
 
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.text.format.DateFormat
+import android.widget.Toast
+import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -9,15 +20,20 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.lestec.eventify.R
 import com.lestec.eventify.data.Boundaries
 import com.lestec.eventify.data.EventEntry
 import com.lestec.eventify.data.EventType
 import com.lestec.eventify.data.LocalRepo
-import com.lestec.eventify.ui.calendar.DayObj
-import com.lestec.eventify.ui.calendar.MonthObj
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.io.BufferedReader
+import java.io.InputStream
+import java.io.InputStreamReader
+import java.io.OutputStream
+import java.nio.charset.StandardCharsets
 import java.util.Calendar
+import java.util.Objects
 
 class MainViewModel(private val repo: LocalRepo): ViewModel() {
     class Factory(private val localRepo: LocalRepo): ViewModelProvider.Factory {
@@ -25,7 +41,8 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
         override fun <T : ViewModel> create(modelClass: Class<T>): T = MainViewModel(localRepo) as T
     }
 
-    // CardItems
+    fun getScope() = viewModelScope
+
     var eventTypes by mutableStateOf(listOf<EventType>())
         private set
     private fun updateEventTypes() {
@@ -65,16 +82,11 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
     }
 
     fun createEventEntry(eventType: EventType) {
-        repo.addEvent(EventEntry(-1, eventType.id, System.currentTimeMillis(), 0, ""))
+        repo.addEvent(EventEntry(-1, eventType.id, daySheetDate.timeInMillis, 0, ""))
         get3MonthsData(today, null)
     }
 
-    init {
-        updateEventTypes()
-    }
-
-    // Calendar
-    val today: Calendar = Calendar.getInstance()
+    private val today: Calendar = Calendar.getInstance()
     private var editedCalendar: Calendar = Calendar.getInstance()
     var currentPage = 1
 
@@ -113,7 +125,7 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
             editedCalendar = calendar
             // Set month name
             nameOfMonth = DateFormat.format(
-                if ((calendar[Calendar.YEAR] == today[Calendar.YEAR])) "LLLL" else "LLLL yyyy",
+                if (calendar[Calendar.YEAR] == today[Calendar.YEAR]) "LLLL" else "LLLL yyyy",
                 calendar
             ).toString()
             // Edit calendar
@@ -210,11 +222,12 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
         // Get data for 1 month
         val c = Calendar.getInstance()
         c.timeInMillis = calEdit.timeInMillis
-        c.set(Calendar.DAY_OF_MONTH, c.getActualMinimum(Calendar.DAY_OF_MONTH))
-        c.set(Calendar.HOUR_OF_DAY, c.getActualMinimum(Calendar.HOUR_OF_DAY))
+        c[Calendar.DAY_OF_MONTH] = day
+        c[Calendar.HOUR_OF_DAY] = c.getActualMinimum(Calendar.HOUR_OF_DAY)
         val monthStart = c.timeInMillis
-        c.set(Calendar.DAY_OF_MONTH, c.getActualMaximum(Calendar.DAY_OF_MONTH))
-        c.set(Calendar.HOUR_OF_DAY, c.getActualMaximum(Calendar.HOUR_OF_DAY))
+        c.timeInMillis = calEdit.timeInMillis
+        c[Calendar.DAY_OF_MONTH] = day + 41
+        c[Calendar.HOUR_OF_DAY] = c.getActualMaximum(Calendar.HOUR_OF_DAY)
         val monthEnd = c.timeInMillis
         val dataForMonth = repo.getEventsEntries(Boundaries(monthStart, monthEnd))
         // Setup days
@@ -231,7 +244,10 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
             for (i in dataForMonth) {
                 c.timeInMillis = i.date
                 // If day from position == day from data
-                if (c[Calendar.DAY_OF_MONTH] == calEditDay[Calendar.DAY_OF_MONTH]) {
+                if (
+                    c[Calendar.DAY_OF_MONTH] == calEditDay[Calendar.DAY_OF_MONTH] &&
+                    c[Calendar.MONTH] == calEditDay[Calendar.MONTH]
+                ) {
                     dataThisDay.add(i)
                 }
             }
@@ -256,11 +272,6 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
         return MonthObj(days = listOfDays, calendar = staticCal)
     }
 
-    init {
-        get3MonthsData(today, null)
-    }
-
-    // Show the day dialog
     var isShowDayDialog by mutableStateOf(false)
         private set
     var timeForDay by mutableLongStateOf(0L)
@@ -272,10 +283,12 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
         dayObj: DayObj? = null
     ) {
         isShowDayDialog = value
-        // Init some data for dialog
         if (dayObj != null) {
             dataForDay = dayObj.listOfStats
             timeForDay = dayObj.timeMills
+            val tempC = Calendar.getInstance()
+            tempC.timeInMillis = dayObj.timeMills
+            daySheetDate = tempC
         }
     }
 
@@ -283,5 +296,123 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
         repo.deleteEvent(eventEntry)
         dataForDay = dataForDay.filter { eventEntry.id != it.id }
         get3MonthsData(editedCalendar, null)
+    }
+
+    var cardItemsOpen by mutableStateOf(false)
+        private set
+    fun updateCardItemsOpen(value: Boolean) {
+        cardItemsOpen = value
+    }
+
+    var daySheetDate by mutableStateOf(today)
+        private set
+    @OptIn(ExperimentalMaterial3Api::class)
+    fun updateCardItemsDateTime(selectedTime: TimePickerState?) {
+        if (selectedTime != null) {
+            daySheetDate.set(Calendar.HOUR_OF_DAY, selectedTime.hour)
+            daySheetDate.set(Calendar.MINUTE, selectedTime.minute)
+        } else {
+            daySheetDate = today
+        }
+    }
+
+    init {
+        updateEventTypes()
+        get3MonthsData(today, null)
+    }
+
+
+    // SETTINGS
+    val settings = listOf(
+        SettingsObj(text = R.string.import_db, icon = Icons.Default.FileDownload),
+        SettingsObj(text = R.string.export_db, icon = Icons.Default.FileUpload)
+    )
+
+    fun getAppVersion(context: Context): String {
+        return try {
+            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            "${context.getString(R.string.app_ver)} ${pInfo.versionName}"
+        } catch (_: Exception) { "" }
+    }
+
+    var isAskDialogOpen by mutableStateOf(false)
+        private set
+    var askDialogAction: Int? by mutableStateOf(null)
+        private set
+    fun setAskDialog(
+        visibility: Boolean,
+        actionStringId: Int?
+    ) {
+        isAskDialogOpen = visibility
+        askDialogAction = actionStringId
+    }
+
+    fun importDB(
+        launcher: ManagedActivityResultLauncher<Intent, androidx.activity.result.ActivityResult>
+    ) {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        intent.setType("application/json")
+        launcher.launch(intent)
+    }
+
+    fun resultImportDB(
+        context: Context,
+        result: androidx.activity.result.ActivityResult
+    ) {
+        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+            try {
+                val inputStream: InputStream? = context.contentResolver.openInputStream(
+                    Objects.requireNonNull<Uri?>(result.data!!.data)
+                )
+                val inReader = BufferedReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
+                var inputLine: String?
+                val response = StringBuilder()
+                while ((inReader.readLine().also { inputLine = it }) != null) {
+                    response.append(inputLine)
+                }
+                inReader.close()
+                inputStream?.close()
+                if (!repo.import(response.toString())) {
+                    throw java.lang.Exception("Import error")
+                }
+                Toast.makeText(context, R.string.ok, Toast.LENGTH_LONG).show()
+            } catch (e: java.lang.Exception) {
+                Toast.makeText(context, R.string.error, Toast.LENGTH_LONG).show()
+            }
+            viewModelScope.launch {
+                delay(1000)
+                updateEventTypes()
+                get3MonthsData(today, null)
+            }
+        }
+    }
+
+    fun exportDB(
+        launcher: ManagedActivityResultLauncher<Intent, androidx.activity.result.ActivityResult>
+    ) {
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        intent.setType("application/json")
+        intent.putExtra(Intent.EXTRA_TITLE, "dataEventify.json")
+        launcher.launch(intent)
+    }
+
+    fun resultExportDB(
+        context: Context,
+        result: androidx.activity.result.ActivityResult
+    ) {
+        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+            try {
+                val os: OutputStream? = context.contentResolver.openOutputStream(Objects.requireNonNull<Uri>(result.data!!.data))
+                val input: ByteArray = repo.export().toString().toByteArray(StandardCharsets.UTF_8)
+                checkNotNull(os)
+                os.write(input, 0, input.size)
+                os.close()
+                Toast.makeText(context, R.string.ok, Toast.LENGTH_LONG).show()
+            } catch (e: java.lang.Exception) {
+                Toast.makeText(context, R.string.error, Toast.LENGTH_LONG).show()
+            }
+        }
     }
 }

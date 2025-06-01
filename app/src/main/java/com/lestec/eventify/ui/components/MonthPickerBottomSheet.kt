@@ -1,4 +1,4 @@
-package com.lestec.eventify.ui.calendar
+package com.lestec.eventify.ui.components
 
 import android.text.format.DateFormat
 import androidx.compose.foundation.background
@@ -124,7 +124,7 @@ fun MonthPickerBottomSheet(
             // Buttons
             LazyVerticalGrid(
                 modifier = Modifier
-                    .padding(horizontal = 5.dp, vertical = 10.dp)
+                    .padding(10.dp)
                     .fillMaxWidth(),
                 columns = GridCells.Fixed(2)
             ) {

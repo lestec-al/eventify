@@ -5,4 +5,11 @@
     <string name="empty_text">Тут пакуль няма нічога</string>
     <string name="event_name">Назва падзеі</string>
     <string name="event_name_error">Увядзіце назву падзеі</string>
+    <string name="events">Падзеі</string>
+    <string name="settings">Налады</string>
+    <string name="export_db">Экспарт даных на прыладу</string>
+    <string name="import_db">Імпарт даных з прылады</string>
+    <string name="app_ver">Вэрсыя праграмы:</string>
+    <string name="error">Памылка</string>
+    <string name="data_replace">Усе існуючыя даныя будуць заменены</string>
 </resources>

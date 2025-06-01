@@ -1,5 +1,7 @@
-package com.lestec.eventify.ui.calendar
+package com.lestec.eventify.ui
 
+import androidx.annotation.StringRes
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.lestec.eventify.data.EventEntry
 import java.util.Calendar
 
@@ -15,3 +17,10 @@ data class MonthObj(
     val days: List<DayObj>,
     val calendar: Calendar
 )
+
+data class SettingsObj(
+    @StringRes val text: Int,
+    val icon: ImageVector
+)
+
+enum class Screens { Calendar, Settings }

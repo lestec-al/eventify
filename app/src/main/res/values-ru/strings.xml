@@ -5,4 +5,11 @@
     <string name="empty_text">Здесь пока ничего нет</string>
     <string name="event_name">Название события</string>
     <string name="event_name_error">Введите название события</string>
+    <string name="events">События</string>
+    <string name="settings">Настройки</string>
+    <string name="export_db">Экспорт данных на устройство</string>
+    <string name="import_db">Импорт данных с устройства</string>
+    <string name="app_ver">Версия приложения:</string>
+    <string name="error">Ошибка</string>
+    <string name="data_replace">Все существующие данные будут заменены</string>
 </resources>

@@ -1,4 +1,4 @@
-package com.lestec.eventify.ui
+package com.lestec.eventify.ui.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
