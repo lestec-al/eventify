@@ -1,6 +1,6 @@
 # Eventify (Android app)
 
-<img src="https://github.com/lestec-al/eventify/raw/main/screenshots.png"/>
+<img src="https://github.com/lestec-al/eventify/raw/main/screenshots.png" alt="Screenshots"/>
 
 An app to quickly add repeatable events to your calendar. Create event templates once, then log new entries with just a tap — perfect for habits, reminders, or daily tasks!
 
