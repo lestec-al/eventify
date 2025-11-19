@@ -7,9 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper
 import org.json.JSONArray
 import org.json.JSONObject
 
-class LocalRepo private constructor(context: Context): SQLiteOpenHelper(
-    context, "app_db", null, 5
-) {
+class LocalRepo private constructor(context: Context): SQLiteOpenHelper(context, "app_db", null, 6) {
 
     companion object {
         @Volatile
@@ -30,10 +28,10 @@ class LocalRepo private constructor(context: Context): SQLiteOpenHelper(
 
     private fun createTables(dbPassed: SQLiteDatabase) {
         dbPassed.execSQL(
-            "CREATE TABLE eventsTypes (id INTEGER PRIMARY KEY, color INTEGER, text TEXT)"
+            "CREATE TABLE $types ($id INTEGER PRIMARY KEY, $color INTEGER, $text TEXT)"
         )
         dbPassed.execSQL(
-            "CREATE TABLE eventsEntries (id INTEGER PRIMARY KEY, typeId INTEGER, date INTEGER)"
+            "CREATE TABLE $entries ($id INTEGER PRIMARY KEY, $typeId INTEGER, $date INTEGER, $color INTEGER, $text TEXT)"
         )
     }
 
@@ -41,33 +39,54 @@ class LocalRepo private constructor(context: Context): SQLiteOpenHelper(
         if (db != null) createTables(db)
     }
 
-    override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {}
+    override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
+        if (newVersion > oldVersion && newVersion == 6 && db != null) {
+            // Get type data
+            val eventTypesList = mutableListOf<EventType>()
+            val cur = db.rawQuery("SELECT * FROM $types", null)
+            if (cur.moveToFirst()) {
+                do {
+                    eventTypesList.add(EventType(cur.getInt(0), cur.getInt(1), cur.getString(2)))
+                } while (cur.moveToNext())
+            }
+            cur.close()
+            // Alter & update table
+            db.execSQL("ALTER TABLE $entries ADD COLUMN $color INTEGER")
+            db.execSQL("ALTER TABLE $entries ADD COLUMN $text TEXT")
+            eventTypesList.forEach {
+                val data = ContentValues().apply {
+                    this.put(color, it.color)
+                    this.put(text, it.text)
+                }
+                db.update(entries, data, "$typeId = ${it.id}", null)
+            }
+        }
+    }
 
 
-    // EXPORT & IMPORT
+    // HELPING
     fun export(): JSONArray {
         if (!db.isOpen) db = this.writableDatabase
         val array = JSONArray()
-        // Loop
-        for (table in listOf("eventsTypes", "eventsEntries")) {
+        for (table in listOf(types, entries)) {
             val cur = db.rawQuery("SELECT * FROM $table", null)
             if (cur.moveToFirst()) {
                 do {
                     val obj = JSONObject()
-                    // Add to json object
-                    obj.put("id", cur.getInt(0))
-                    obj.put("type", table)
+                    obj.put(id, cur.getInt(0))
+                    obj.put(type, table)
                     when (table) {
-                        "eventsTypes" -> {
-                            obj.put("color", cur.getInt(1))
-                            obj.put("text", cur.getString(2))
+                        types -> {
+                            obj.put(color, cur.getInt(1))
+                            obj.put(text, cur.getString(2))
                         }
-                        "eventsEntries" -> {
-                            obj.put("typeId", cur.getInt(1))
-                            obj.put("date", cur.getLong(2))
+                        entries -> {
+                            obj.put(typeId, cur.getInt(1))
+                            obj.put(date, cur.getLong(2))
+                            obj.put(color, cur.getInt(3))
+                            obj.put(text, cur.getString(4))
                         }
                     }
-                    // Add json object to json array
                     array.put(obj)
                 } while (cur.moveToNext())
             }
@@ -79,25 +98,39 @@ class LocalRepo private constructor(context: Context): SQLiteOpenHelper(
     fun import(data: String): Boolean {
         if (!db.isOpen) db = this.writableDatabase
         val oldData = export()
-        clean()
+        clean(db)
         return try {
+            val typesList = mutableListOf<EventType>() // Support for old imports
             val jsonData = JSONArray(data)
             for (i in 0..<jsonData.length()) {
                 val obj = jsonData.getJSONObject(i)
                 val cv = ContentValues()
-                cv.put("id", obj.getInt("id"))
-                val type = obj.getString("type")
-                when (type) {
-                    "eventsTypes" -> {
-                        cv.put("color", obj.getInt("color"))
-                        cv.put("text", obj.getString("text"))
+                val typeDbName = obj.getString(type)
+                when (typeDbName) {
+                    types -> {
+                        cv.put(id, obj.getInt(id))
+                        cv.put(color, obj.getInt(color))
+                        cv.put(text, obj.getString(text))
+                        // Support for old imports
+                        typesList.add(EventType(obj.getInt(id), obj.getInt(color), obj.getString(text)))
                     }
-                    "eventsEntries" -> {
-                        cv.put("typeId", obj.getInt("typeId"))
-                        cv.put("date", obj.getLong("date"))
+                    entries -> {
+                        cv.put(id, obj.getInt(id))
+                        cv.put(typeId, obj.getInt(typeId))
+                        cv.put(date, obj.getLong(date))
+                        try {
+                            cv.put(color, obj.getInt(color))
+                            cv.put(text, obj.getString(text))
+                        } catch (_: Exception) {
+                            // Support for old imports
+                            typesList.find { it.id == obj.getInt(typeId) }?.also {
+                                cv.put(color, it.color)
+                                cv.put(text, it.text)
+                            }
+                        }
                     }
                 }
-                db.insert(type, null, cv)
+                db.insert(typeDbName, null, cv)
             }
             true
         } catch (_: Exception) {
@@ -106,14 +139,11 @@ class LocalRepo private constructor(context: Context): SQLiteOpenHelper(
         }
     }
 
-    private fun clean() {
-        if (!db.isOpen) db = this.writableDatabase
-        db.execSQL("DELETE FROM eventsTypes")
-        db.execSQL("DELETE FROM eventsEntries")
+    private fun clean(db: SQLiteDatabase) {
+        db.execSQL("DELETE FROM $types")
+        db.execSQL("DELETE FROM $entries")
     }
 
-
-    //
     private fun insert(
         tableName: String,
         data: ContentValues
@@ -124,24 +154,27 @@ class LocalRepo private constructor(context: Context): SQLiteOpenHelper(
 
     private fun delete(
         tableName: String,
-        id: Int
+        objId: Int
     ) {
         if (!db.isOpen) db = this.writableDatabase
-        db.delete(tableName, "id = $id", null)
+        db.delete(tableName, "$id = $objId", null)
     }
 
 
-    //
+    // DAO
     fun addEvent(e: EventType) {
-        insert("eventsTypes", ContentValues().apply {
-            this.put("color", e.color)
-            this.put("text", e.text)
+        insert(types, ContentValues().apply {
+            this.put(color, e.color)
+            this.put(text, e.text)
         })
     }
+
     fun addEvent(e: EventEntry) {
-        insert("eventsEntries", ContentValues().apply {
-            this.put("typeId", e.typeId)
-            this.put("date", e.date)
+        insert(entries, ContentValues().apply {
+            this.put(typeId, e.typeId)
+            this.put(date, e.date)
+            this.put(color, e.color)
+            this.put(text, e.text)
         })
     }
 
@@ -149,8 +182,8 @@ class LocalRepo private constructor(context: Context): SQLiteOpenHelper(
         val list = mutableListOf<EventType>()
         if (!db.isOpen) db = this.writableDatabase
         val cur = db.rawQuery(
-            "SELECT * FROM ${
-                if (b == null) "eventsTypes" else "eventsTypes WHERE date BETWEEN ${b.start} AND ${b.end}"
+            "SELECT * FROM $types${
+                if (b == null) "" else " WHERE $date BETWEEN ${b.start} AND ${b.end}"
             }",
             null
         )
@@ -168,16 +201,14 @@ class LocalRepo private constructor(context: Context): SQLiteOpenHelper(
         cur.close()
         return list
     }
+
     fun getEventsEntries(b: Boundaries? = null): List<EventEntry> {
         val list = mutableListOf<EventEntry>()
         if (!db.isOpen) db = this.writableDatabase
         val cur = db.rawQuery(
-            """
-                SELECT eventsEntries.id, typeId, date, color, text
-                FROM eventsEntries
-                INNER JOIN eventsTypes on eventsTypes.id = eventsEntries.typeId
-                ${if (b == null) "" else "WHERE date BETWEEN ${b.start} AND ${b.end}"}
-            """.trimIndent(),
+            "SELECT * FROM $entries${
+                if (b == null) "" else " WHERE $date BETWEEN ${b.start} AND ${b.end}"
+            }",
             null
         )
         if (cur.moveToFirst()) {
@@ -199,20 +230,18 @@ class LocalRepo private constructor(context: Context): SQLiteOpenHelper(
 
     fun updateEvent(e: EventType) {
         val data = ContentValues().apply {
-            this.put("color", e.color)
-            this.put("text", e.text)
+            this.put(color, e.color)
+            this.put(text, e.text)
         }
         if (!db.isOpen) db = this.writableDatabase
-        db.update("eventsTypes", data, "id = ${e.id}", null)
+        db.update(types, data, "$id = ${e.id}", null)
     }
 
     fun deleteEvent(e: EventType) {
-        delete("eventsTypes", e.id)
-        // Delete entries for this type
-        if (!db.isOpen) db = this.writableDatabase
-        db.delete("eventsEntries", "typeId = ${e.id}", null)
+        delete(types, e.id)
     }
+
     fun deleteEvent(e: EventEntry) {
-        delete("eventsEntries", e.id)
+        delete(entries, e.id)
     }
 }

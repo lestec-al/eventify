@@ -96,11 +96,7 @@ fun SettingsScreen(
                                 },
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = it.icon,
-                                contentDescription = text,
-                                modifier = Modifier.padding(12.dp)
-                            )
+                            Icon(it.icon, text, Modifier.padding(12.dp))
                             Text(
                                 text = text,
                                 style = MaterialTheme.typography.titleMedium

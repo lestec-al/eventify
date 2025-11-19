@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="color">Цвет</string>
-    <string name="long_click_delete_info">Зажмите, чтобы удалить</string>
+    <string name="delete_info">Этот тип события будет удалён</string>
     <string name="empty_text">Здесь пока ничего нет</string>
-    <string name="event_name">Название события</string>
+    <string name="name">Название</string>
     <string name="event_name_error">Введите название события</string>
-    <string name="events">События</string>
+    <string name="event_types">Типы событий</string>
     <string name="settings">Настройки</string>
     <string name="export_db">Экспорт данных на устройство</string>
     <string name="import_db">Импорт данных с устройства</string>
-    <string name="app_ver">Версия приложения:</string>
+    <string name="app_ver">Версия:</string>
     <string name="error">Ошибка</string>
     <string name="data_replace">Все существующие данные будут заменены</string>
+    <string name="add_entry">Добавить запись</string>
+    <string name="add_type">Добавить тип</string>
+    <string name="edit_type">Редактировать тип</string>
 </resources>

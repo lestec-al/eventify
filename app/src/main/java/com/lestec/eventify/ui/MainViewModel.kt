@@ -14,9 +14,15 @@ import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.core.graphics.blue
+import androidx.core.graphics.green
+import androidx.core.graphics.red
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -34,6 +40,7 @@ import java.io.OutputStream
 import java.nio.charset.StandardCharsets
 import java.util.Calendar
 import java.util.Objects
+import kotlin.random.Random
 
 class MainViewModel(private val repo: LocalRepo): ViewModel() {
     class Factory(private val localRepo: LocalRepo): ViewModelProvider.Factory {
@@ -41,50 +48,112 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
         override fun <T : ViewModel> create(modelClass: Class<T>): T = MainViewModel(localRepo) as T
     }
 
-    fun getScope() = viewModelScope
-
     var eventTypes by mutableStateOf(listOf<EventType>())
         private set
-    private fun updateEventTypes() {
-        eventTypes = repo.getEventsTypes()
-    }
 
     var editSheetOpen by mutableStateOf(false)
         private set
     var editedEventType by mutableStateOf<EventType?>(null)
         private set
+    var whatIsCreated by mutableStateOf<CreatedType>(CreatedType.Type)
+        private set
     fun updateEditSheetOpen(
-        sheetOpen: Boolean,
+        sheetOpen: Boolean = false,
+        whatIsCreated: CreatedType = CreatedType.Type,
         eventType: EventType? = null
     ) {
-        editSheetOpen = sheetOpen
-        editedEventType = eventType
+        this.editSheetOpen = sheetOpen
+        this.editedEventType = eventType
+        this.whatIsCreated = whatIsCreated
+        if (sheetOpen) {
+            this.textValue = eventType?.text ?: ""
+            this.redColor = eventType?.color?.let { Color(it).toArgb().red } ?: Random.nextInt(256)
+            this.greenColor = eventType?.color?.let { Color(it).toArgb().green } ?: Random.nextInt(256)
+            this.blueColor = eventType?.color?.let { Color(it).toArgb().blue } ?: Random.nextInt(256)
+        }
     }
 
-    fun createEventType(newEventType: EventType) {
-        repo.addEvent(newEventType)
-        updateEventTypes()
-        updateEditSheetOpen(false)
-    }
-
-    fun updateEventType(eventType: EventType) {
-        repo.updateEvent(eventType)
-        updateEventTypes()
-        updateEditSheetOpen(false)
+    fun deleteEditedEventType() {
+        repo.deleteEvent(editedEventType!!)
+        eventTypes = repo.getEventsTypes()
+        isDelDialogOpen = false
+        updateEditSheetOpen()
         get3MonthsData(editedCalendar, null)
     }
 
-    fun deleteEventType(eventType: EventType) {
-        repo.deleteEvent(eventType)
-        updateEventTypes()
-        updateEditSheetOpen(false)
-        get3MonthsData(editedCalendar, null)
-    }
-
-    fun createEventEntry(eventType: EventType) {
-        repo.addEvent(EventEntry(-1, eventType.id, daySheetDate.timeInMillis, 0, ""))
+    fun createEventEntry(
+        typeId: Int,
+        color: Int,
+        text: String
+    ) {
+        repo.addEvent(EventEntry(-1, typeId, daySheetDate.timeInMillis, color, text))
         get3MonthsData(today, null)
     }
+
+    var textValue by mutableStateOf("")
+        private set
+    var redColor by mutableIntStateOf(Random.nextInt(256))
+        private set
+    var greenColor by mutableIntStateOf(Random.nextInt(256))
+        private set
+    var blueColor by mutableIntStateOf(Random.nextInt(256))
+        private set
+    var textError by mutableStateOf(false)
+        private set
+    var isDelDialogOpen by mutableStateOf(false)
+        private set
+
+    fun delDialogUpdate(value: Boolean = false) {
+        isDelDialogOpen = value
+    }
+
+    fun updateColor(colorType: Char, color: Float) {
+        when (colorType) {
+            'r' -> redColor = color.toInt()
+            'g' -> greenColor = color.toInt()
+            'b' -> blueColor = color.toInt()
+        }
+    }
+
+    fun getWholeColor() = Color(redColor, greenColor, blueColor)
+
+    fun createRandomColor() {
+        redColor = Random.nextInt(256)
+        greenColor = Random.nextInt(256)
+        blueColor = Random.nextInt(256)
+    }
+
+    fun editSheetOnSave() {
+        textError = false
+        if (textValue.isEmpty()) {
+            textError = true
+        } else {
+            val color = getWholeColor().toArgb()
+            val text = textValue
+            when (whatIsCreated) {
+                CreatedType.Type -> {
+                    val it = EventType(
+                        id = editedEventType?.id ?: -1,
+                        color = color,
+                        text = text
+                    )
+                    if (editedEventType != null) repo.updateEvent(it) else repo.addEvent(it)
+                    eventTypes = repo.getEventsTypes()
+                    get3MonthsData(editedCalendar, null)
+                }
+                CreatedType.Entry -> {
+                    createEventEntry(typeId = -1, color = color, text = text)
+                    updateCardItemsOpen()
+                }
+            }
+            updateEditSheetOpen()
+        }
+    }
+
+    fun onTextValueChange(it: String) {
+        textValue = it
+    }
+
 
     private val today: Calendar = Calendar.getInstance()
     private var editedCalendar: Calendar = Calendar.getInstance()
@@ -96,7 +165,7 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
         val c = Calendar.getInstance()
         var d = c.firstDayOfWeek
         c[Calendar.DAY_OF_WEEK] = d
-        for (unused in 1..7) {
+        (1..7).forEach {
             list.add(DateFormat.format("EEE", c).toString())
             d = if ((d + 1 <= 7)) d + 1 else 1
             c[Calendar.DAY_OF_WEEK] = d
@@ -137,7 +206,7 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
             calEdit.set(Calendar.MONTH, calendar.get(Calendar.MONTH) - 2)
             // Loop for months
             val listOfMonths = mutableListOf<MonthObj>()
-            for (m in 1..3) {
+            (1..3).forEach {
                 calEdit.set(Calendar.MONTH, calEdit.get(Calendar.MONTH) + 1)
                 listOfMonths.add(get1MonthData(calEdit))
             }
@@ -232,7 +301,7 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
         val dataForMonth = repo.getEventsEntries(Boundaries(monthStart, monthEnd))
         // Setup days
         val listOfDays = mutableListOf<DayObj>()
-        for (pos in 0..41) { // day..(day+41) ???
+        (0..41).forEach {
             // This calendar represent date of the specific day
             // And at the start it often be for previous month
             val calEditDay = Calendar.getInstance()
@@ -279,7 +348,7 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
     var dataForDay by mutableStateOf(listOf<EventEntry>())
         private set
     fun setIsShowDayDialog(
-        value: Boolean,
+        value: Boolean = false,
         dayObj: DayObj? = null
     ) {
         isShowDayDialog = value
@@ -300,7 +369,7 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
 
     var cardItemsOpen by mutableStateOf(false)
         private set
-    fun updateCardItemsOpen(value: Boolean) {
+    fun updateCardItemsOpen(value: Boolean = false) {
         cardItemsOpen = value
     }
 
@@ -317,7 +386,7 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
     }
 
     init {
-        updateEventTypes()
+        eventTypes = repo.getEventsTypes()
         get3MonthsData(today, null)
     }
 
@@ -352,7 +421,7 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
     ) {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
         intent.addCategory(Intent.CATEGORY_OPENABLE)
-        intent.setType("application/json")
+        intent.type = "application/json"
         launcher.launch(intent)
     }
 
@@ -377,12 +446,12 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
                     throw java.lang.Exception("Import error")
                 }
                 Toast.makeText(context, R.string.ok, Toast.LENGTH_LONG).show()
-            } catch (e: java.lang.Exception) {
+            } catch (_: java.lang.Exception) {
                 Toast.makeText(context, R.string.error, Toast.LENGTH_LONG).show()
             }
             viewModelScope.launch {
                 delay(1000)
-                updateEventTypes()
+                eventTypes = repo.getEventsTypes()
                 get3MonthsData(today, null)
             }
         }
@@ -393,7 +462,7 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
     ) {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
         intent.addCategory(Intent.CATEGORY_OPENABLE)
-        intent.setType("application/json")
+        intent.type = "application/json"
         intent.putExtra(Intent.EXTRA_TITLE, "dataEventify.json")
         launcher.launch(intent)
     }
@@ -410,9 +479,25 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
                 os.write(input, 0, input.size)
                 os.close()
                 Toast.makeText(context, R.string.ok, Toast.LENGTH_LONG).show()
-            } catch (e: java.lang.Exception) {
+            } catch (_: java.lang.Exception) {
                 Toast.makeText(context, R.string.error, Toast.LENGTH_LONG).show()
             }
         }
     }
+
+
+    // OTHERS
+    fun getTime() = "${
+        if (daySheetDate.get(Calendar.HOUR_OF_DAY) < 10) {
+            "0${daySheetDate.get(Calendar.HOUR_OF_DAY)}"
+        } else {
+            daySheetDate.get(Calendar.HOUR_OF_DAY)
+        }
+    }:${
+        if (daySheetDate.get(Calendar.MINUTE) < 10) {
+            "0${daySheetDate.get(Calendar.MINUTE)}"
+        } else {
+            daySheetDate.get(Calendar.MINUTE)
+        }
+    }"
 }

@@ -5,6 +5,8 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,14 +48,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
-import com.lestec.eventify.ui.components.CardItemsSheet
-import com.lestec.eventify.ui.components.DaySheet
-import com.lestec.eventify.ui.components.EditSheet
-import com.lestec.eventify.ui.components.MonthPickerBottomSheet
+import com.lestec.eventify.ui.sheets.CardItemsSheet
+import com.lestec.eventify.ui.sheets.DaySheet
+import com.lestec.eventify.ui.sheets.EditSheet
+import com.lestec.eventify.ui.sheets.DatePickerSheet
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
@@ -77,7 +82,7 @@ fun CalendarScreen(
     )
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
-            vm.getScope().launch {
+            launch {
                 vm.currentPage = page
                 vm.addMonthToData(
                     pagerState.lastScrolledBackward,
@@ -87,12 +92,34 @@ fun CalendarScreen(
         }
     }
 
+    // For icon button long click
+    val interactionSource = remember { MutableInteractionSource() }
+    val viewConfiguration = LocalViewConfiguration.current
+    LaunchedEffect(interactionSource) {
+        var isLongClick = false
+        interactionSource.interactions.collectLatest { interaction ->
+            when (interaction) {
+                is PressInteraction.Press -> {
+                    isLongClick = false
+                    delay(viewConfiguration.longPressTimeoutMillis)
+                    isLongClick = true
+                    vm.get3MonthsData(Calendar.getInstance(), pagerState)
+                }
+                is PressInteraction.Release -> {
+                    if (!isLongClick) {
+                        vm.setIsDatePickerON(true)
+                    }
+                }
+            }
+        }
+    }
+
     // Dialogs
-    MonthPickerBottomSheet(
+    DatePickerSheet(
         visible = vm.isDatePickerON,
-        currentMonth = vm.monthsData[vm.currentPage].calendar.get(Calendar.MONTH),
-        currentYear = vm.monthsData[vm.currentPage].calendar.get(Calendar.YEAR),
-        confirmButtonCLicked = { month, year ->
+        initMonth = vm.monthsData[vm.currentPage].calendar.get(Calendar.MONTH),
+        initYear = vm.monthsData[vm.currentPage].calendar.get(Calendar.YEAR),
+        onConfirm = { month, year ->
             val c = Calendar.getInstance()
             c.set(Calendar.MONTH, month)
             c.set(Calendar.YEAR, year)
@@ -100,33 +127,17 @@ fun CalendarScreen(
             vm.get3MonthsData(c, pagerState)
             vm.setIsDatePickerON(false)
         },
-        cancelClicked = {
+        onCancel = {
             vm.setIsDatePickerON(false)
         },
-        resetClicked = {
+        onReset = {
             vm.get3MonthsData(Calendar.getInstance(), pagerState)
             vm.setIsDatePickerON(false)
         }
     )
-    DaySheet(
-        onDismissRequest = {
-            vm.setIsShowDayDialog(false)
-        },
-        visible = vm.isShowDayDialog,
-        vm = vm
-    )
-    EditSheet(
-        onDismiss = { vm.updateEditSheetOpen(false) },
-        onSave = { if (vm.editedEventType != null) vm.updateEventType(it) else vm.createEventType(it) },
-        onDelete = { vm.deleteEventType(vm.editedEventType!!) },
-        editedEventType = vm.editedEventType,
-        isVisible = vm.editSheetOpen
-    )
-    CardItemsSheet(
-        onDismiss = { vm.updateCardItemsOpen(false) },
-        vm = vm,
-        isVisible = vm.cardItemsOpen
-    )
+    DaySheet(vm = vm)
+    EditSheet(vm = vm)
+    CardItemsSheet(vm = vm)
 
     // Main view
     Scaffold(
@@ -137,7 +148,10 @@ fun CalendarScreen(
                 },
                 actions = {
                     // Set date button
-                    IconButton(onClick = { vm.setIsDatePickerON(true) }) {
+                    IconButton(
+                        onClick = {},
+                        interactionSource = interactionSource
+                    ) {
                         Icon(Icons.Default.EditCalendar, null)
                     }
                     // Settings button
@@ -153,7 +167,6 @@ fun CalendarScreen(
                 onClick = {
                     vm.updateCardItemsDateTime(null)
                     vm.updateCardItemsOpen(true)
-
                 }
             ) {
                 Icon(Icons.Default.Add, null)
@@ -161,7 +174,7 @@ fun CalendarScreen(
         },
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
-        // Show months to all cards
+        // Show months to all mounts
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.padding(innerPadding),
@@ -217,11 +230,7 @@ fun CalendarScreen(
                                         .fillMaxWidth()
                                         .background(
                                             color = if (it.isToday) {
-                                                if (it.isThisMonth) {
-                                                    MaterialTheme.colorScheme.onBackground
-                                                } else {
-                                                    MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
-                                                }
+                                                MaterialTheme.colorScheme.onBackground
                                             } else {
                                                 Color.Transparent
                                             },

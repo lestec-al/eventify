@@ -18,3 +18,12 @@ data class EventEntry(
     val color: Int,
     val text: String
 )
+
+const val types = "eventsTypes"
+const val entries = "eventsEntries"
+const val id = "id"
+const val color = "color"
+const val text = "text"
+const val typeId = "typeId"
+const val date = "date"
+const val type = "type"

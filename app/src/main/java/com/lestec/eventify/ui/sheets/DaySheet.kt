@@ -1,9 +1,9 @@
-package com.lestec.eventify.ui.components
+package com.lestec.eventify.ui.sheets
 
-import android.text.format.DateFormat
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,20 +13,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.outlined.AddCircleOutline
+import androidx.compose.material.icons.outlined.AddTask
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimeInput
@@ -47,25 +44,22 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.lestec.eventify.R
 import com.lestec.eventify.ui.MainViewModel
+import com.lestec.eventify.ui.components.BaseSheet
+import com.lestec.eventify.ui.components.EmptyBox
+import com.lestec.eventify.ui.formatMillsDate
 import com.lestec.eventify.ui.formatMillsTime
-import com.lestec.eventify.ui.pxToDp
 import java.util.Calendar
-import java.util.Date
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DaySheet(
-    onDismissRequest: () -> Unit,
-    visible: Boolean,
-    vm: MainViewModel
-) {
-    if (visible) {
+fun DaySheet(vm: MainViewModel) {
+    if (vm.isShowDayDialog) {
         val context = LocalContext.current
         val halfScreenWidth = LocalWindowInfo.current.containerSize.width / 2
         val haptic = LocalHapticFeedback.current
-
         var isTimeEdit by remember { mutableStateOf(false) }
         val timePickerState = rememberTimePickerState(
             initialHour = vm.daySheetDate.get(Calendar.HOUR_OF_DAY),
@@ -73,84 +67,66 @@ fun DaySheet(
             is24Hour = true
         )
 
-        ModalBottomSheet(onDismissRequest = onDismissRequest) {
-            // Edit time
-            if (isTimeEdit) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(horizontal = 12.dp)
-                ) {
-                    TimeInput(state = timePickerState)
-                    Button(
-                        onClick = {
-                            vm.updateCardItemsDateTime(timePickerState)
-                            isTimeEdit = false
-                        }, modifier = Modifier.padding(start = 10.dp)
+        BaseSheet(
+            onDismiss = vm::setIsShowDayDialog,
+            title = vm.timeForDay.formatMillsDate(context) + ",",
+            upActions = if (!isTimeEdit) null else {
+                {
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .padding(top = 10.dp)
+                            .fillMaxWidth()
                     ) {
-                        Icon(imageVector = Icons.Default.Check, contentDescription = null)
+                        TimeInput(state = timePickerState)
+                        OutlinedButton(
+                            onClick = {
+                                vm.updateCardItemsDateTime(timePickerState)
+                                isTimeEdit = false
+                            },
+                            modifier = Modifier.padding(15.dp)
+                        ) {
+                            Icon(Icons.Outlined.Check, "ok")
+                        }
                     }
                 }
-            }
-            //
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(start = 20.dp)
-                    .fillMaxWidth()
-            ) {
-                // Date
-                Text(
-                    text = DateFormat.getLongDateFormat(context).format(Date(vm.timeForDay)),
-                    style = MaterialTheme.typography.titleLarge
-                )
-                // Time
-                TextButton(
-                    onClick = { isTimeEdit = true },
-                    modifier = Modifier.padding(horizontal = 12.dp)
-                ) {
+            },
+            actionsLeft = {
+                TextButton(onClick = { isTimeEdit = !isTimeEdit }) {
                     Text(
-                        text = "${
-                            if (vm.daySheetDate.get(Calendar.HOUR_OF_DAY) < 10) {
-                                "0${vm.daySheetDate.get(Calendar.HOUR_OF_DAY)}"
-                            } else {
-                                vm.daySheetDate.get(Calendar.HOUR_OF_DAY)
-                            }
-                        }:${
-                            if (vm.daySheetDate.get(Calendar.MINUTE) < 10) {
-                                "0${vm.daySheetDate.get(Calendar.MINUTE)}"
-                            } else {
-                                vm.daySheetDate.get(Calendar.MINUTE)
-                            }
-                        }",
+                        text = vm.getTime(),
                         style = MaterialTheme.typography.titleLarge
                     )
                 }
-                Spacer(Modifier.weight(1f))
-                // Open card items
-                IconButton(onClick = {
-                    vm.updateCardItemsOpen(true)
-                    onDismissRequest()
-                }) {
-                    Icon(imageVector = Icons.Outlined.AddCircleOutline, contentDescription = null)
+            },
+            actionsRight = {
+                IconButton(
+                    onClick = {
+                        vm.updateCardItemsOpen(true)
+                        vm.setIsShowDayDialog()
+                    }
+                ) {
+                    Icon(Icons.Outlined.AddTask, context.getString(R.string.add_entry))
                 }
             }
+        ) {
             Spacer(Modifier.height(10.dp))
             // Stats
             vm.dataForDay.forEach {
                 val color = Color(it.color)
                 var offsetX by remember { mutableFloatStateOf(0f) }
                 var hapticIsPerformed by remember { mutableStateOf(false) }
-
                 Box(
                     modifier = Modifier
-                        .padding(horizontal = 12.dp, vertical = 4.dp)
-                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
                     // Delete container
-                    Card(
-                        modifier = Modifier.width(offsetX.pxToDp()),
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.error
+                            containerColor = if (offsetX != 0f) MaterialTheme.colorScheme.error else Color.Unspecified
                         ),
                         content = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -214,7 +190,7 @@ fun DaySheet(
                                 )
                                 Text(
                                     text = it.date.formatMillsTime(context),
-                                    color = color.copy(alpha = 0.6f),
+                                    color = color.copy(alpha = 0.8f),
                                     textAlign = TextAlign.End,
                                     modifier = Modifier.fillMaxWidth()
                                 )
@@ -226,7 +202,7 @@ fun DaySheet(
             if (vm.dataForDay.isEmpty()) {
                 EmptyBox()
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(6.dp))
         }
     }
 }

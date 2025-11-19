@@ -24,3 +24,5 @@ data class SettingsObj(
 )
 
 enum class Screens { Calendar, Settings }
+
+enum class CreatedType { Type, Entry }

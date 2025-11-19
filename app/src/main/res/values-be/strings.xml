@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="color">Колер</string>
-    <string name="long_click_delete_info">Трымайце, каб выдаліць</string>
+    <string name="delete_info">Гэты тып падзеі будзе выдалены</string>
     <string name="empty_text">Тут пакуль няма нічога</string>
-    <string name="event_name">Назва падзеі</string>
+    <string name="name">Назва</string>
     <string name="event_name_error">Увядзіце назву падзеі</string>
-    <string name="events">Падзеі</string>
+    <string name="event_types">Тыпы падзеяў</string>
     <string name="settings">Налады</string>
     <string name="export_db">Экспарт даных на прыладу</string>
     <string name="import_db">Імпарт даных з прылады</string>
-    <string name="app_ver">Вэрсыя праграмы:</string>
+    <string name="app_ver">Вэрсыя:</string>
     <string name="error">Памылка</string>
     <string name="data_replace">Усе існуючыя даныя будуць заменены</string>
+    <string name="add_entry">Дадаць запіс</string>
+    <string name="add_type">Дадаць тып</string>
+    <string name="edit_type">Рэдагаваць тып</string>
 </resources>
