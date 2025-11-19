@@ -6,6 +6,8 @@ An app to quickly add repeatable events to your calendar. Create event templates
 
 ## Features
 - Calendar with repeatable events functionality
+- Ability to add custom (without type attached) entries
+- Ability to select almost any color (by using red/green/blue sliders)
 - Import/Export your data from/to the device
 - Light/Dark theme (plus dynamic colors to match the device theme for Android 12+)
 
