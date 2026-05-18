@@ -1,5 +1,9 @@
 package com.lestec.eventify.ui
 
+import android.content.Context
+import android.content.Intent
+import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.result.ActivityResult
 import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.lestec.eventify.data.EventEntry
@@ -20,7 +24,11 @@ data class MonthObj(
 
 data class SettingsObj(
     @StringRes val text: Int,
-    val icon: ImageVector
+    val icon: ImageVector,
+    val action: (
+        context: Context,
+        launcher: ManagedActivityResultLauncher<Intent, ActivityResult>
+    ) -> Unit
 )
 
 enum class Screens { Calendar, Settings }

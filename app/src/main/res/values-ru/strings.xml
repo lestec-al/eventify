@@ -15,4 +15,5 @@
     <string name="add_entry">Добавить запись</string>
     <string name="add_type">Добавить тип</string>
     <string name="edit_type">Редактировать тип</string>
+    <string name="privacy_policy">Политика конфиденциальности</string>
 </resources>

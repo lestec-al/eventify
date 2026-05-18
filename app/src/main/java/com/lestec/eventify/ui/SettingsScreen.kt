@@ -89,10 +89,7 @@ fun SettingsScreen(
                                 .fillMaxWidth()
                                 .defaultMinSize(minHeight = 50.dp)
                                 .clickable(role = Role.Button) {
-                                    when (it.text) {
-                                        R.string.import_db -> vm.setAskDialog(true, R.string.import_db)
-                                        R.string.export_db -> vm.exportDB(launcherExport)
-                                    }
+                                    it.action(context, launcherExport)
                                 },
                             verticalAlignment = Alignment.CenterVertically
                         ) {

@@ -7,10 +7,12 @@ import android.net.Uri
 import android.text.format.DateFormat
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.result.ActivityResult
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.getValue
@@ -23,6 +25,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.blue
 import androidx.core.graphics.green
 import androidx.core.graphics.red
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -393,8 +396,19 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
 
     // SETTINGS
     val settings = listOf(
-        SettingsObj(text = R.string.import_db, icon = Icons.Default.FileDownload),
-        SettingsObj(text = R.string.export_db, icon = Icons.Default.FileUpload)
+        SettingsObj(text = R.string.import_db, icon = Icons.Default.FileDownload) { _, _ ->
+            setAskDialog(true, R.string.import_db)
+        },
+        SettingsObj(text = R.string.export_db, icon = Icons.Default.FileUpload) { _, launcher ->
+            exportDB(launcher)
+        },
+        SettingsObj(text = R.string.privacy_policy, icon = Icons.Default.Shield) { context, _ ->
+            try {
+                context.startActivity(
+                    Intent(Intent.ACTION_VIEW).setData(context.getString(R.string.privacy_link).toUri())
+                )
+            } catch (_: Exception) {}
+        }
     )
 
     fun getAppVersion(context: Context): String {
@@ -416,19 +430,14 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
         askDialogAction = actionStringId
     }
 
-    fun importDB(
-        launcher: ManagedActivityResultLauncher<Intent, androidx.activity.result.ActivityResult>
-    ) {
+    fun importDB(launcher: ManagedActivityResultLauncher<Intent, ActivityResult>) {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
         intent.addCategory(Intent.CATEGORY_OPENABLE)
         intent.type = "application/json"
         launcher.launch(intent)
     }
 
-    fun resultImportDB(
-        context: Context,
-        result: androidx.activity.result.ActivityResult
-    ) {
+    fun resultImportDB(context: Context, result: ActivityResult) {
         if (result.resultCode == Activity.RESULT_OK && result.data != null) {
             try {
                 val inputStream: InputStream? = context.contentResolver.openInputStream(
@@ -457,9 +466,7 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
         }
     }
 
-    fun exportDB(
-        launcher: ManagedActivityResultLauncher<Intent, androidx.activity.result.ActivityResult>
-    ) {
+    fun exportDB(launcher: ManagedActivityResultLauncher<Intent, ActivityResult>) {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
         intent.addCategory(Intent.CATEGORY_OPENABLE)
         intent.type = "application/json"
@@ -467,10 +474,7 @@ class MainViewModel(private val repo: LocalRepo): ViewModel() {
         launcher.launch(intent)
     }
 
-    fun resultExportDB(
-        context: Context,
-        result: androidx.activity.result.ActivityResult
-    ) {
+    fun resultExportDB(context: Context, result: ActivityResult) {
         if (result.resultCode == Activity.RESULT_OK && result.data != null) {
             try {
                 val os: OutputStream? = context.contentResolver.openOutputStream(Objects.requireNonNull<Uri>(result.data!!.data))
