@@ -20,7 +20,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.lestec.eventify.R
 import com.lestec.eventify.ui.CreatedType
@@ -33,22 +33,20 @@ import com.lestec.eventify.ui.theme.predefinedColors
 @Composable
 fun EditSheet(vm: MainViewModel) {
     if (vm.editSheetOpen) {
-        val context = LocalContext.current
-
         AskDialog(
             visible = vm.isDelDialogOpen,
-            text = context.getString(R.string.delete_info),
+            text = stringResource(R.string.delete_info),
             confirmButtonCLicked = vm::deleteEditedEventType,
             cancelClicked = vm::delDialogUpdate
         )
         BaseSheet(
             onDismiss = vm::updateEditSheetOpen,
-            title = context.getString(
+            title = stringResource(
                 if (vm.whatIsCreated == CreatedType.Entry) R.string.add_entry else {
                     if (vm.editedEventType != null) R.string.edit_type else R.string.add_type
                 }
             ),
-            actionsRight = {
+            titleActionsRight = {
                 (1..2).forEach {
                     if (it == 2 || (it == 1 && vm.editedEventType != null)) {
                         IconButton(onClick = if (it == 1) {{ vm.delDialogUpdate(true) }} else vm::editSheetOnSave) {
@@ -66,11 +64,11 @@ fun EditSheet(vm: MainViewModel) {
                 value = vm.textValue,
                 onValueChange = vm::onTextValueChange,
                 label = {
-                    Text(text = context.getString(R.string.name))
+                    Text(text = stringResource(R.string.name))
                 },
                 supportingText = {
                     Text(
-                        text = if (vm.textError) context.getString(R.string.event_name_error) else "",
+                        text = if (vm.textError) stringResource(R.string.event_name_error) else "",
                         color = MaterialTheme.colorScheme.error
                     )
                 },
@@ -87,7 +85,7 @@ fun EditSheet(vm: MainViewModel) {
                     .fillMaxWidth()
             ) {
                 Text(
-                    text = context.getString(R.string.color),
+                    text = stringResource(R.string.color),
                     style = MaterialTheme.typography.titleMedium,
                     color = OutlinedTextFieldDefaults.colors().focusedLabelColor,
                     modifier = Modifier.padding(start = 20.dp)

@@ -1,5 +1,6 @@
 package com.lestec.eventify.ui.sheets
 
+import android.text.format.DateFormat
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
@@ -13,6 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddTask
 import androidx.compose.material.icons.outlined.Check
@@ -27,6 +30,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimeInput
+import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -41,6 +45,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -64,7 +69,7 @@ fun DaySheet(vm: MainViewModel) {
         val timePickerState = rememberTimePickerState(
             initialHour = vm.daySheetDate.get(Calendar.HOUR_OF_DAY),
             initialMinute = vm.daySheetDate.get(Calendar.MINUTE),
-            is24Hour = true
+            is24Hour = DateFormat.is24HourFormat(context)
         )
 
         BaseSheet(
@@ -78,12 +83,18 @@ fun DaySheet(vm: MainViewModel) {
                             .padding(top = 10.dp)
                             .fillMaxWidth()
                     ) {
-                        TimeInput(state = timePickerState)
+                        TimeInput(
+                            state = timePickerState,
+                            colors = TimePickerDefaults.colors(
+                                periodSelectorSelectedContainerColor = MaterialTheme.colorScheme.secondaryContainer
+                            )
+                        )
                         OutlinedButton(
                             onClick = {
                                 vm.updateCardItemsDateTime(timePickerState)
                                 isTimeEdit = false
                             },
+                            shape = CardDefaults.shape,
                             modifier = Modifier.padding(15.dp)
                         ) {
                             Icon(Icons.Outlined.Check, "ok")
@@ -91,118 +102,120 @@ fun DaySheet(vm: MainViewModel) {
                     }
                 }
             },
-            actionsLeft = {
+            titleActionsLeft = {
                 TextButton(onClick = { isTimeEdit = !isTimeEdit }) {
                     Text(
-                        text = vm.getTime(),
+                        text = vm.daySheetDate.timeInMillis.formatMillsTime(context),
                         style = MaterialTheme.typography.titleLarge
                     )
                 }
             },
-            actionsRight = {
+            titleActionsRight = {
                 IconButton(
                     onClick = {
                         vm.updateCardItemsOpen(true)
                         vm.setIsShowDayDialog()
                     }
                 ) {
-                    Icon(Icons.Outlined.AddTask, context.getString(R.string.add_entry))
+                    Icon(Icons.Outlined.AddTask, stringResource(R.string.add_entry))
                 }
             }
         ) {
-            Spacer(Modifier.height(10.dp))
-            // Stats
-            vm.dataForDay.forEach {
-                val color = Color(it.color)
-                var offsetX by remember { mutableFloatStateOf(0f) }
-                var hapticIsPerformed by remember { mutableStateOf(false) }
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    // Delete container
-                    ElevatedCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (offsetX != 0f) MaterialTheme.colorScheme.error else Color.Unspecified
-                        ),
-                        content = {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Delete,
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .padding(horizontal = 10.dp)
-                                        .size(32.dp)
-                                )
-                                // This is used to set equal size for delete and item containers ???
+            LazyColumn {
+                item { Spacer(Modifier.height(10.dp)) }
+                // Stats
+                items(items = vm.dataForDay) {
+                    val color = Color(it.color)
+                    var offsetX by remember { mutableFloatStateOf(0f) }
+                    var hapticIsPerformed by remember { mutableStateOf(false) }
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Delete container
+                        ElevatedCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (offsetX != 0f) MaterialTheme.colorScheme.error else Color.Unspecified
+                            ),
+                            content = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Delete,
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .padding(horizontal = 10.dp)
+                                            .size(32.dp)
+                                    )
+                                    // This is used to set equal size for delete and item containers ???
+                                    Column(
+                                        modifier = Modifier
+                                            .padding(horizontal = 10.dp, vertical = 5.dp)
+                                            .fillMaxWidth()
+                                    ) {
+                                        Text(text = "", style = MaterialTheme.typography.titleLarge)
+                                        Text(text = "")
+                                    }
+                                }
+                            }
+                        )
+                        // Item container
+                        ElevatedCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                // Swipe to delete
+                                .offset { IntOffset(offsetX.roundToInt(), 0) }
+                                .draggable(
+                                    orientation = Orientation.Horizontal,
+                                    state = rememberDraggableState { delta ->
+                                        val offsetTemp = offsetX + delta
+                                        if (offsetTemp > 0) offsetX = offsetTemp
+                                        // Haptic feedback
+                                        if (offsetX > halfScreenWidth && !hapticIsPerformed) {
+                                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                                            hapticIsPerformed = true
+                                        } else if (offsetX < halfScreenWidth) {
+                                            hapticIsPerformed = false
+                                        }
+                                    },
+                                    onDragStopped = { _ ->
+                                        if (offsetX > halfScreenWidth) {
+                                            vm.deleteEventEntry(it)
+                                        }
+                                        offsetX = 0f
+                                        hapticIsPerformed = false
+                                    }
+                                ),
+                            colors = CardDefaults.cardColors(),
+                            content = {
                                 Column(
                                     modifier = Modifier
                                         .padding(horizontal = 10.dp, vertical = 5.dp)
                                         .fillMaxWidth()
                                 ) {
-                                    Text(text = "", style = MaterialTheme.typography.titleLarge)
-                                    Text(text = "")
+                                    Text(
+                                        text = it.text,
+                                        color = color,
+                                        style = MaterialTheme.typography.titleLarge
+                                    )
+                                    Text(
+                                        text = it.date.formatMillsTime(context),
+                                        color = color.copy(alpha = 0.8f),
+                                        textAlign = TextAlign.End,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
                                 }
                             }
-                        }
-                    )
-                    // Item container
-                    ElevatedCard(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            // Swipe to delete
-                            .offset { IntOffset(offsetX.roundToInt(), 0) }
-                            .draggable(
-                                orientation = Orientation.Horizontal,
-                                state = rememberDraggableState { delta ->
-                                    val offsetTemp = offsetX + delta
-                                    if (offsetTemp > 0) offsetX = offsetTemp
-                                    // Haptic feedback
-                                    if (offsetX > halfScreenWidth && !hapticIsPerformed) {
-                                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                                        hapticIsPerformed = true
-                                    } else if (offsetX < halfScreenWidth) {
-                                        hapticIsPerformed = false
-                                    }
-                                },
-                                onDragStopped = { _ ->
-                                    if (offsetX > halfScreenWidth) {
-                                        vm.deleteEventEntry(it)
-                                    }
-                                    offsetX = 0f
-                                    hapticIsPerformed = false
-                                }
-                            ),
-                        colors = CardDefaults.cardColors(),
-                        content = {
-                            Column(
-                                modifier = Modifier
-                                    .padding(horizontal = 10.dp, vertical = 5.dp)
-                                    .fillMaxWidth()
-                            ) {
-                                Text(
-                                    text = it.text,
-                                    color = color,
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                                Text(
-                                    text = it.date.formatMillsTime(context),
-                                    color = color.copy(alpha = 0.8f),
-                                    textAlign = TextAlign.End,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-                        }
-                    )
+                        )
+                    }
                 }
+                if (vm.eventTypes.isEmpty()) {
+                    item { EmptyBox() }
+                }
+                item { Spacer(Modifier.height(6.dp)) }
             }
-            if (vm.dataForDay.isEmpty()) {
-                EmptyBox()
-            }
-            Spacer(Modifier.height(6.dp))
         }
     }
 }

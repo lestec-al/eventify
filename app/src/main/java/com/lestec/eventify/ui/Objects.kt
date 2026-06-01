@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.lestec.eventify.data.EventEntry
 import java.util.Calendar
 
-data class DayObj(
+data class Day(
     val dayNumber: String,
     val isThisMonth: Boolean,
     val isToday: Boolean,
@@ -17,12 +17,12 @@ data class DayObj(
     val listOfStats: List<EventEntry>
 )
 
-data class MonthObj(
-    val days: List<DayObj>,
+data class Month(
+    val days: List<Day>,
     val calendar: Calendar
 )
 
-data class SettingsObj(
+data class Setting(
     @StringRes val text: Int,
     val icon: ImageVector,
     val action: (
@@ -31,6 +31,6 @@ data class SettingsObj(
     ) -> Unit
 )
 
-enum class Screens { Calendar, Settings }
+enum class Screen { Calendar, Settings }
 
 enum class CreatedType { Type, Entry }

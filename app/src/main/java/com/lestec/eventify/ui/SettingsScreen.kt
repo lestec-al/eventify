@@ -2,10 +2,9 @@ package com.lestec.eventify.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.contract.ActivityResultContracts as Contracts
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -17,6 +16,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,10 +31,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.lestec.eventify.R
+import com.lestec.eventify.ui.components.AboutApp
 import com.lestec.eventify.ui.components.AskDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,22 +46,17 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     BackHandler(onBack = onBack)
-    val launcherImport = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        vm.resultImportDB(context, it)
+    val launcherImport = rememberLauncherForActivityResult(Contracts.StartActivityForResult()) {
+        vm.resultImportDb(it)
     }
-    val launcherExport = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        vm.resultExportDB(context, it)
+    val launcherExport = rememberLauncherForActivityResult(Contracts.StartActivityForResult()) {
+        vm.resultExportDb(it)
     }
 
     AskDialog(
         visible = vm.isAskDialogOpen,
-        text = context.getString(R.string.data_replace),
-        confirmButtonCLicked = {
-            when(vm.askDialogAction) {
-                R.string.import_db -> vm.importDB(launcherImport)
-            }
-            vm.setAskDialog(false, null)
-        },
+        text = stringResource(R.string.data_replace),
+        confirmButtonCLicked = { vm.askDialogConfirm(launcherImport) },
         cancelClicked = { vm.setAskDialog(false, null) }
     )
 
@@ -65,53 +64,71 @@ fun SettingsScreen(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = {
-                    Text(context.getString(R.string.settings))
-                },
+                title = { Text(stringResource(R.string.settings)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                    }
+                },
+                actions = {
+                    if (vm.isLoading) {
+                        CircularProgressIndicator()
                     }
                 }
             )
         }
     ) { innerPadding ->
-        Box(
-            modifier = Modifier.padding(innerPadding),
-            contentAlignment = Alignment.TopStart
+        LazyColumn(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                LazyColumn {
-                    items(items = vm.settings) {
-                        val text = context.getString(it.text)
+            items(items = listOf(vm.settings, vm.aboutSettings)) { items ->
+                val showIndicator = if (items == vm.aboutSettings) vm.showAbout else null
+
+                ElevatedCard(modifier = Modifier.padding(horizontal = 10.dp)) {
+                    items.forEach {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .defaultMinSize(minHeight = 50.dp)
-                                .clickable(role = Role.Button) {
-                                    it.action(context, launcherExport)
-                                },
+                                .clickable(
+                                    enabled = !vm.isLoading,
+                                    role = Role.Button,
+                                    onClick = { it.action(context, launcherExport) }
+                                ),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(it.icon, text, Modifier.padding(12.dp))
+                            Icon(
+                                imageVector = it.icon,
+                                contentDescription = null,
+                                modifier = Modifier.padding(12.dp)
+                            )
                             Text(
-                                text = text,
+                                text = stringResource(it.text),
                                 style = MaterialTheme.typography.titleMedium
                             )
+                            if (showIndicator != null) {
+                                Spacer(Modifier.weight(1f))
+                                Icon(
+                                    imageVector = if (showIndicator) {
+                                        Icons.Default.ArrowDropUp
+                                    } else {
+                                        Icons.Default.ArrowDropDown
+                                    },
+                                    contentDescription = null,
+                                    modifier = Modifier.padding(horizontal = 12.dp)
+                                )
+                            }
                         }
                     }
+                    if (showIndicator != null && showIndicator == true) {
+                        AboutApp(vm)
+                    }
                 }
-                Spacer(Modifier.height(32.dp).weight(1f))
-                Text(
-                    text = vm.getAppVersion(context),
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.bodyMedium
-                )
             }
+            item { Spacer(Modifier.height(10.dp)) }
         }
     }
 }

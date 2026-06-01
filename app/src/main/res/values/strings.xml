@@ -3,6 +3,7 @@
     <string name="ok" translatable="false">OK</string>
 
     <string name="privacy_link" translatable="false">https://lestec-al.github.io/lestec-al/privacy-policy-eventify</string>
+    <string name="email_link" translatable="false">mailto:alexyurgel@gmail.com</string>
 
     <string name="color">Color</string>
     <string name="delete_info">This event type will be deleted</string>
@@ -20,4 +21,7 @@
     <string name="add_type">Add type</string>
     <string name="edit_type">Edit type</string>
     <string name="privacy_policy">Privacy Policy</string>
+    <string name="about_app">About the app</string>
+    <string name="support">Contact support</string>
+    <string name="add_entry_description">Add entry for</string>
 </resources>

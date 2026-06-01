@@ -16,4 +16,7 @@
     <string name="add_type">Дадаць тып</string>
     <string name="edit_type">Рэдагаваць тып</string>
     <string name="privacy_policy">Палітыка прыватнасьці</string>
+    <string name="about_app">Пра дадатак</string>
+    <string name="support">Напісаць у падтрымку</string>
+    <string name="add_entry_description">Дадаць запіс на</string>
 </resources>

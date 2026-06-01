@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -20,9 +21,10 @@ import androidx.compose.ui.unit.dp
 fun BaseSheet(
     onDismiss: () -> Unit,
     title: String? = null,
+    titleActionsLeft: (@Composable () -> Unit)? = null,
+    titleActionsRight: (@Composable () -> Unit)? = null,
+    description: String? = null,
     upActions: (@Composable () -> Unit)? = null,
-    actionsLeft: (@Composable () -> Unit)? = null,
-    actionsRight: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     ModalBottomSheet(
@@ -40,12 +42,21 @@ fun BaseSheet(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(start = 5.dp)
+                    modifier = Modifier.padding(horizontal = 5.dp)
                 )
-                actionsLeft?.invoke()
+                titleActionsLeft?.invoke()
                 Spacer(Modifier.weight(1f))
-                actionsRight?.invoke()
+                titleActionsRight?.invoke()
             }
+        }
+        if (description != null) {
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = Color.Gray
+                ),
+                modifier = Modifier.padding(horizontal = 15.dp)
+            )
         }
         content()
     }

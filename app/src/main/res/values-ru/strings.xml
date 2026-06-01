@@ -16,4 +16,7 @@
     <string name="add_type">Добавить тип</string>
     <string name="edit_type">Редактировать тип</string>
     <string name="privacy_policy">Политика конфиденциальности</string>
+    <string name="about_app">О приложении</string>
+    <string name="support">Написать в поддержку</string>
+    <string name="add_entry_description">Добавить запись на</string>
 </resources>

@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -44,6 +45,7 @@ fun AskDialog(
                 ) {
                     OutlinedButton(
                         onClick = cancelClicked,
+                        shape = CardDefaults.shape,
                         modifier = Modifier
                             .padding(horizontal = 5.dp)
                             .weight(1f)
@@ -52,6 +54,7 @@ fun AskDialog(
                     }
                     OutlinedButton(
                         onClick = confirmButtonCLicked,
+                        shape = CardDefaults.shape,
                         modifier = Modifier
                             .padding(horizontal = 5.dp)
                             .weight(1f)
