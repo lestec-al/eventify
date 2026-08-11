@@ -16,8 +16,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -82,48 +80,35 @@ fun SettingsScreen(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            items(items = listOf(vm.settings, vm.aboutSettings)) { items ->
-                val showIndicator = if (items == vm.aboutSettings) vm.showAbout else null
-
+            items(items = listOf(vm.dataSettings, null)) { items ->
                 ElevatedCard(modifier = Modifier.padding(horizontal = 10.dp)) {
-                    items.forEach {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .defaultMinSize(minHeight = 50.dp)
-                                .clickable(
-                                    enabled = !vm.isLoading,
-                                    role = Role.Button,
-                                    onClick = { it.action(context, launcherExport) }
-                                ),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = it.icon,
-                                contentDescription = null,
-                                modifier = Modifier.padding(12.dp)
-                            )
-                            Text(
-                                text = stringResource(it.text),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            if (showIndicator != null) {
-                                Spacer(Modifier.weight(1f))
+                    if (items != null) {
+                        items.forEach {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .defaultMinSize(minHeight = 50.dp)
+                                    .clickable(
+                                        enabled = !vm.isLoading,
+                                        role = Role.Button,
+                                        onClick = { it.action(context, launcherExport) }
+                                    ),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Icon(
-                                    imageVector = if (showIndicator) {
-                                        Icons.Default.ArrowDropUp
-                                    } else {
-                                        Icons.Default.ArrowDropDown
-                                    },
+                                    imageVector = it.icon,
                                     contentDescription = null,
-                                    modifier = Modifier.padding(horizontal = 12.dp)
+                                    modifier = Modifier.padding(12.dp)
+                                )
+                                Text(
+                                    text = stringResource(it.text),
+                                    style = MaterialTheme.typography.titleMedium
                                 )
                             }
                         }
-                    }
-                    if (showIndicator != null && showIndicator == true) {
+                    } else {
                         AboutApp(vm)
                     }
                 }

@@ -14,9 +14,11 @@ import androidx.compose.material.icons.outlined.AddTask
 import androidx.compose.material.icons.outlined.BookmarkAdd
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -39,21 +41,11 @@ fun CardItemsSheet(vm: MainViewModel) {
             onDismiss = vm::updateCardItemsOpen,
             title = stringResource(R.string.event_types),
             titleActionsRight = {
-                listOf(CreatedType.Type, CreatedType.Entry).forEach {
-                    IconButton(onClick = { vm.updateEditSheetOpen(true, it) }) {
-                        Icon(
-                            imageVector = when (it) {
-                                CreatedType.Type -> Icons.Outlined.BookmarkAdd
-                                CreatedType.Entry -> Icons.Outlined.AddTask
-                            },
-                            contentDescription = stringResource(
-                                when (it) {
-                                    CreatedType.Type -> R.string.add_type
-                                    CreatedType.Entry -> R.string.add_entry
-                                }
-                            )
-                        )
-                    }
+                IconButton(onClick = { vm.updateEditSheetOpen(true, CreatedType.Type) }) {
+                    Icon(
+                        imageVector = Icons.Outlined.BookmarkAdd,
+                        contentDescription = stringResource(R.string.add_type)
+                    )
                 }
             },
             description = vm.getDateTime(stringResource(R.string.add_entry_description), context)
@@ -99,7 +91,21 @@ fun CardItemsSheet(vm: MainViewModel) {
                 if (vm.eventTypes.isEmpty()) {
                     item { EmptyBox() }
                 }
-                item { Spacer(Modifier.height(6.dp)) }
+                item {
+                    OutlinedButton(
+                        onClick = { vm.updateEditSheetOpen(true, CreatedType.Entry) },
+                        shape = CardDefaults.shape,
+                        modifier = Modifier
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.AddTask,
+                            contentDescription = stringResource(R.string.add_entry)
+                        )
+                    }
+                }
+                item { Spacer(Modifier.height(10.dp)) }
             }
         }
     }

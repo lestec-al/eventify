@@ -9,14 +9,13 @@
     <string name="settings">Настройки</string>
     <string name="export_db">Экспорт данных на устройство</string>
     <string name="import_db">Импорт данных с устройства</string>
-    <string name="app_ver">Версия:</string>
+    <string name="app_ver">Версия приложения:</string>
     <string name="error">Ошибка</string>
     <string name="data_replace">Все существующие данные будут заменены</string>
     <string name="add_entry">Добавить запись</string>
     <string name="add_type">Добавить тип</string>
     <string name="edit_type">Редактировать тип</string>
     <string name="privacy_policy">Политика конфиденциальности</string>
-    <string name="about_app">О приложении</string>
     <string name="support">Написать в поддержку</string>
     <string name="add_entry_description">Добавить запись на</string>
 </resources>

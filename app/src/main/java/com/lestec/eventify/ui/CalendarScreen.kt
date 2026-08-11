@@ -61,6 +61,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("ConfigurationScreenWidthHeight")
@@ -101,7 +102,7 @@ fun CalendarScreen(
             when (interaction) {
                 is PressInteraction.Press -> {
                     isLongClick = false
-                    delay(viewConfiguration.longPressTimeoutMillis)
+                    delay(viewConfiguration.longPressTimeoutMillis.milliseconds)
                     isLongClick = true
                     vm.get3MonthsData(Calendar.getInstance(), pagerState)
                 }
@@ -117,8 +118,12 @@ fun CalendarScreen(
     // Dialogs
     DatePickerSheet(
         visible = vm.isDatePickerON,
-        initMonth = vm.monthsData[vm.currentPage].calendar.get(Calendar.MONTH),
-        initYear = vm.monthsData[vm.currentPage].calendar.get(Calendar.YEAR),
+        initMonth = {
+            vm.monthsData[vm.currentPage].calendar.get(Calendar.MONTH)
+        },
+        initYear = {
+            vm.monthsData[vm.currentPage].calendar.get(Calendar.YEAR)
+        },
         onConfirm = { month, year ->
             val c = Calendar.getInstance()
             c.set(Calendar.MONTH, month)

@@ -9,7 +9,6 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.getValue
@@ -37,6 +36,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class MainViewModel(
     private val repo: LocalRepo,
@@ -59,7 +60,7 @@ class MainViewModel(
         private set
     var editedEventType by mutableStateOf<EventType?>(null)
         private set
-    var whatIsCreated by mutableStateOf<CreatedType>(CreatedType.Type)
+    var whatIsCreated by mutableStateOf(CreatedType.Type)
         private set
     fun updateEditSheetOpen(
         sheetOpen: Boolean = false,
@@ -139,14 +140,17 @@ class MainViewModel(
                     )
                     if (editedEventType != null) repo.updateEvent(it) else repo.addEvent(it)
                     eventTypes = repo.getEventsTypes()
-                    get3MonthsData(editedCalendar, null)
+                    viewModelScope.launch {
+                        get3MonthsDataSuspend(editedCalendar, null)
+                        updateEditSheetOpen()
+                    }
                 }
                 CreatedType.Entry -> {
                     createEventEntry(typeId = -1, color = color, text = text)
                     updateCardItemsOpen()
+                    updateEditSheetOpen()
                 }
             }
-            updateEditSheetOpen()
         }
     }
 
@@ -165,7 +169,7 @@ class MainViewModel(
         val c = Calendar.getInstance()
         var d = c.firstDayOfWeek
         c[Calendar.DAY_OF_WEEK] = d
-        (1..7).forEach {
+        (1..7).forEach { _ ->
             list.add(DateFormat.format("EEE", c).toString())
             d = if ((d + 1 <= 7)) d + 1 else 1
             c[Calendar.DAY_OF_WEEK] = d
@@ -186,37 +190,39 @@ class MainViewModel(
     /**
      * Get data for [calendar] & one month before & one month after
      */
-    fun get3MonthsData(calendar: Calendar, pagerState: PagerState?) {
-        viewModelScope.launch {
-            editedCalendar = calendar
-            // Set month name
-            nameOfMonth = DateFormat.format(
-                if (calendar[Calendar.YEAR] == today[Calendar.YEAR]) "LLLL" else "LLLL yyyy",
-                calendar
-            ).toString()
-            // Edit calendar
-            val calEdit = Calendar.getInstance()
-            calEdit.time = calendar.time
-            calEdit.set(Calendar.DAY_OF_MONTH, 1)
-            calEdit.set(Calendar.HOUR_OF_DAY, 0)
-            // Set to -2 to make possible increasing +1 each time in for loop
-            calEdit.set(Calendar.MONTH, calendar.get(Calendar.MONTH) - 2)
-            // Loop for months
-            val listOfMonths = mutableListOf<Month>()
-            (1..3).forEach {
-                calEdit.set(Calendar.MONTH, calEdit.get(Calendar.MONTH) + 1)
-                listOfMonths.add(get1MonthData(calEdit))
-            }
-            monthsData = listOfMonths.toList()
-            // Scroll to pos 1 (middle target pos)
-            // Without that there are scroll bugs
-            if (pagerState != null) {
-                while (pagerState.isScrollInProgress) {
-                    delay(100)
-                }
-                pagerState.scrollToPage(1)
-            }
+    private suspend fun get3MonthsDataSuspend(calendar: Calendar, pagerState: PagerState?) {
+        editedCalendar = calendar
+        // Set month name
+        nameOfMonth = DateFormat.format(
+            if (calendar[Calendar.YEAR] == today[Calendar.YEAR]) "LLLL" else "LLLL yyyy",
+            calendar
+        ).toString()
+        // Edit calendar
+        val calEdit = Calendar.getInstance()
+        calEdit.time = calendar.time
+        calEdit.set(Calendar.DAY_OF_MONTH, 1)
+        calEdit.set(Calendar.HOUR_OF_DAY, 0)
+        // Set to -2 to make possible increasing +1 each time in for loop
+        calEdit.set(Calendar.MONTH, calendar.get(Calendar.MONTH) - 2)
+        // Loop for months
+        val listOfMonths = mutableListOf<Month>()
+        (1..3).forEach { _ ->
+            calEdit.set(Calendar.MONTH, calEdit.get(Calendar.MONTH) + 1)
+            listOfMonths.add(get1MonthData(calEdit))
         }
+        monthsData = listOfMonths.toList()
+        // Scroll to pos 1 (middle target pos)
+        // Without that there are scroll bugs
+        if (pagerState != null) {
+            while (pagerState.isScrollInProgress) {
+                delay(100.milliseconds)
+            }
+            pagerState.scrollToPage(1)
+        }
+    }
+
+    fun get3MonthsData(calendar: Calendar, pagerState: PagerState?) = viewModelScope.launch {
+        get3MonthsDataSuspend(calendar, pagerState)
     }
 
     fun addMonthToData(lastScrolledBack: Boolean, landedCal: Calendar) {
@@ -299,9 +305,8 @@ class MainViewModel(
         val dataForMonth = repo.getEventsEntries(Boundaries(monthStart, monthEnd))
         // Setup days
         val listOfDays = mutableListOf<Day>()
-        (0..41).forEach {
+        (0..41).forEach { _ ->
             // This calendar represent date of the specific day
-            // And at the start it often be for previous month
             val calEditDay = Calendar.getInstance()
             calEditDay[Calendar.YEAR] = calEdit[Calendar.YEAR]
             calEditDay[Calendar.MONTH] = calEdit[Calendar.MONTH]
@@ -392,24 +397,17 @@ class MainViewModel(
     // SETTINGS
     var isLoading by mutableStateOf(false)
         private set
-    var showAbout by mutableStateOf(false)
-        private set
     var isAskDialogOpen by mutableStateOf(false)
         private set
     var askDialogAction: Int? by mutableStateOf(null)
         private set
 
-    val settings = listOf(
+    val dataSettings = listOf(
         Setting(text = R.string.import_db, icon = Icons.Default.FileDownload) { _, _ ->
             setAskDialog(true, R.string.import_db)
         },
         Setting(text = R.string.export_db, icon = Icons.Default.FileUpload) { _, launcher ->
             storageRepo.exportDb(launcher)
-        }
-    )
-    val aboutSettings = listOf(
-        Setting(text = R.string.about_app, icon = Icons.Outlined.Info) { _, _ ->
-            showAbout = !showAbout
         }
     )
 
@@ -436,23 +434,19 @@ class MainViewModel(
         setAskDialog(false, null)
     }
 
-    fun resultImportDb(result: ActivityResult) {
-        viewModelScope.launch(Dispatchers.IO) {
-            isLoading = true
-            storageRepo.resultImportDb(result, repo::import)
-            delay(1000)
-            eventTypes = repo.getEventsTypes()
-            get3MonthsData(today, null)
-            isLoading = false
-        }
+    fun resultImportDb(result: ActivityResult) = viewModelScope.launch(Dispatchers.IO) {
+        isLoading = true
+        storageRepo.resultImportDb(result, repo::import)
+        delay(1.seconds)
+        eventTypes = repo.getEventsTypes()
+        get3MonthsData(today, null)
+        isLoading = false
     }
 
-    fun resultExportDb(result: ActivityResult) {
-        viewModelScope.launch(Dispatchers.IO) {
-            isLoading = true
-            storageRepo.resultExportDb(result) { repo.export().toString() }
-            isLoading = false
-        }
+    fun resultExportDb(result: ActivityResult) = viewModelScope.launch(Dispatchers.IO) {
+        isLoading = true
+        storageRepo.resultExportDb(result) { repo.export().toString() }
+        isLoading = false
     }
 
 

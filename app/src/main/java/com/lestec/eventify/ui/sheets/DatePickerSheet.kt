@@ -42,8 +42,8 @@ import java.util.Calendar
 @Composable
 fun DatePickerSheet(
     visible: Boolean,
-    initMonth: Int,
-    initYear: Int,
+    initMonth: () -> Int,
+    initYear: () -> Int,
     onConfirm: (month: Int, year: Int) -> Unit,
     onCancel: () -> Unit,
     onReset: () -> Unit
@@ -63,8 +63,8 @@ fun DatePickerSheet(
             }
             mutableStateOf(months.toList())
         }
-        var month by remember { mutableStateOf(months[initMonth]) }
-        var year by remember { mutableIntStateOf(initYear) }
+        var month by remember { mutableStateOf(months[initMonth()]) }
+        var year by remember { mutableIntStateOf(initYear()) }
 
         BaseSheet(
             onDismiss = onCancel,

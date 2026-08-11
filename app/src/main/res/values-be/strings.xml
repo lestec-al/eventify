@@ -9,14 +9,13 @@
     <string name="settings">Налады</string>
     <string name="export_db">Экспарт даных на прыладу</string>
     <string name="import_db">Імпарт даных з прылады</string>
-    <string name="app_ver">Вэрсыя:</string>
+    <string name="app_ver">Вэрсыя дадатка:</string>
     <string name="error">Памылка</string>
     <string name="data_replace">Усе існуючыя даныя будуць заменены</string>
     <string name="add_entry">Дадаць запіс</string>
     <string name="add_type">Дадаць тып</string>
     <string name="edit_type">Рэдагаваць тып</string>
     <string name="privacy_policy">Палітыка прыватнасьці</string>
-    <string name="about_app">Пра дадатак</string>
     <string name="support">Напісаць у падтрымку</string>
     <string name="add_entry_description">Дадаць запіс на</string>
 </resources>

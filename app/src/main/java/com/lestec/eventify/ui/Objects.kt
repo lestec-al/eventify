@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.result.ActivityResult
-import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.lestec.eventify.data.EventEntry
 import java.util.Calendar
@@ -23,7 +22,7 @@ data class Month(
 )
 
 data class Setting(
-    @StringRes val text: Int,
+    val text: Int,
     val icon: ImageVector,
     val action: (
         context: Context,

@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.lestec.eventify.R
@@ -25,6 +26,7 @@ fun AboutApp(vm: MainViewModel) {
         modifier = Modifier
             .padding(horizontal = 20.dp, vertical = 10.dp)
             .fillMaxWidth(),
+        fontWeight = FontWeight.SemiBold,
         style = MaterialTheme.typography.bodyLarge
     )
     Text(
