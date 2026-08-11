@@ -44,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.onSizeChanged
@@ -76,6 +77,7 @@ fun CalendarScreen(
 
     var screenHeightDp by remember { mutableStateOf(0.dp) }
     val itemHeightDp = screenHeightDp / 6
+    val shape = RoundedCornerShape(5.dp)
 
     val pagerState = rememberPagerState(
         initialPage = 1,
@@ -220,7 +222,13 @@ fun CalendarScreen(
                         Box(
                             modifier = Modifier
                                 .height(itemHeightDp)
-                                .border(width = 0.3.dp, color = DividerDefaults.color)
+                                .padding(2.dp)
+                                .clip(shape)
+                                .border(
+                                    width = 0.3.dp,
+                                    color = DividerDefaults.color,
+                                    shape = shape
+                                )
                                 .clickable {
                                     vm.setIsShowDayDialog(true, it)
                                 },
@@ -259,11 +267,11 @@ fun CalendarScreen(
                                     Text(
                                         text = if ((text.length > 4)) text.substring(0, 4) else text,
                                         modifier = Modifier
-                                            .padding(horizontal = 4.dp, vertical = 0.5.dp)
+                                            .padding(vertical = 0.5.dp)
                                             .fillMaxWidth()
                                             .background(
                                                 color = Color(it1.color),
-                                                shape = RoundedCornerShape(4.dp)
+                                                shape = shape
                                             ),
                                         textAlign = TextAlign.Center,
                                         color = if (it1.color == Color.White.toArgb()) Color.Black else Color.White,
