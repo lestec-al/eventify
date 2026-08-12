@@ -211,8 +211,13 @@ fun DaySheet(vm: MainViewModel) {
                         )
                     }
                 }
-                if (vm.eventTypes.isEmpty()) {
-                    item { EmptyBox() }
+                if (vm.dataForDay.isEmpty()) {
+                    item {
+                        EmptyBox(
+                            text = stringResource(R.string.add_entry_info),
+                            iconId = Icons.Outlined.AddTask
+                        )
+                    }
                 }
                 item { Spacer(Modifier.height(6.dp)) }
             }

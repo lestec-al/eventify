@@ -34,17 +34,17 @@ import com.lestec.eventify.ui.components.BaseSheet
 import com.lestec.eventify.ui.components.EmptyBox
 
 @Composable
-fun CardItemsSheet(vm: MainViewModel) {
+fun TypesSheet(vm: MainViewModel) {
     if (vm.cardItemsOpen) {
         val context = LocalContext.current
         BaseSheet(
             onDismiss = vm::updateCardItemsOpen,
-            title = stringResource(R.string.event_types),
+            title = stringResource(R.string.event_templates),
             titleActionsRight = {
                 IconButton(onClick = { vm.updateEditSheetOpen(true, CreatedType.Type) }) {
                     Icon(
                         imageVector = Icons.Outlined.BookmarkAdd,
-                        contentDescription = stringResource(R.string.add_type)
+                        contentDescription = stringResource(R.string.add_template)
                     )
                 }
             },
@@ -89,7 +89,14 @@ fun CardItemsSheet(vm: MainViewModel) {
                     }
                 }
                 if (vm.eventTypes.isEmpty()) {
-                    item { EmptyBox() }
+                    item {
+                        EmptyBox(
+                            text = stringResource(R.string.add_template_info),
+                            iconId = Icons.Outlined.BookmarkAdd,
+                            text2 = stringResource(R.string.add_entry_info),
+                            iconId2 = Icons.Outlined.AddTask
+                        )
+                    }
                 }
                 item {
                     OutlinedButton(

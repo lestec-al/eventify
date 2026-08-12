@@ -3,7 +3,6 @@ package com.lestec.eventify.ui
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -26,7 +25,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -54,7 +52,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
-import com.lestec.eventify.ui.sheets.CardItemsSheet
+import com.lestec.eventify.ui.sheets.TypesSheet
 import com.lestec.eventify.ui.sheets.DaySheet
 import com.lestec.eventify.ui.sheets.EditSheet
 import com.lestec.eventify.ui.sheets.DatePickerSheet
@@ -78,6 +76,7 @@ fun CalendarScreen(
     var screenHeightDp by remember { mutableStateOf(0.dp) }
     val itemHeightDp = screenHeightDp / 6
     val shape = RoundedCornerShape(5.dp)
+    val color = CardDefaults.elevatedCardColors().containerColor
 
     val pagerState = rememberPagerState(
         initialPage = 1,
@@ -144,7 +143,7 @@ fun CalendarScreen(
     )
     DaySheet(vm = vm)
     EditSheet(vm = vm)
-    CardItemsSheet(vm = vm)
+    TypesSheet(vm = vm)
 
     // Main view
     Scaffold(
@@ -224,11 +223,7 @@ fun CalendarScreen(
                                 .height(itemHeightDp)
                                 .padding(2.dp)
                                 .clip(shape)
-                                .border(
-                                    width = 0.3.dp,
-                                    color = DividerDefaults.color,
-                                    shape = shape
-                                )
+                                .background(color)
                                 .clickable {
                                     vm.setIsShowDayDialog(true, it)
                                 },

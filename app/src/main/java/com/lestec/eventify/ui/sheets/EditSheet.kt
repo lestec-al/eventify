@@ -43,7 +43,7 @@ fun EditSheet(vm: MainViewModel) {
             onDismiss = vm::updateEditSheetOpen,
             title = stringResource(
                 if (vm.whatIsCreated == CreatedType.Entry) R.string.add_entry else {
-                    if (vm.editedEventType != null) R.string.edit_type else R.string.add_type
+                    if (vm.editedEventType != null) R.string.edit_template else R.string.add_template
                 }
             ),
             titleActionsRight = {
