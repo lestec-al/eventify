@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AddTask
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.CardDefaults
@@ -45,6 +44,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
@@ -117,7 +117,10 @@ fun DaySheet(vm: MainViewModel) {
                         vm.setIsShowDayDialog()
                     }
                 ) {
-                    Icon(Icons.Outlined.AddTask, stringResource(R.string.add_entry))
+                    Icon(
+                        painterResource(R.drawable.ic_add_task),
+                        stringResource(R.string.add_entry)
+                    )
                 }
             }
         ) {
@@ -215,7 +218,7 @@ fun DaySheet(vm: MainViewModel) {
                     item {
                         EmptyBox(
                             text = stringResource(R.string.add_entry_info),
-                            iconId = Icons.Outlined.AddTask
+                            iconId = R.drawable.ic_add_task
                         )
                     }
                 }

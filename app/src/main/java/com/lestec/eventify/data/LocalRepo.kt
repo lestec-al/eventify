@@ -147,9 +147,9 @@ class LocalRepo private constructor(context: Context): SQLiteOpenHelper(context,
     private fun insert(
         tableName: String,
         data: ContentValues
-    ) {
+    ): Long {
         if (!db.isOpen) db = this.writableDatabase
-        db.insert(tableName, null, data)
+        return db.insert(tableName, null, data)
     }
 
     private fun delete(
@@ -162,8 +162,8 @@ class LocalRepo private constructor(context: Context): SQLiteOpenHelper(context,
 
 
     // DAO
-    fun addEvent(e: EventType) {
-        insert(types, ContentValues().apply {
+    fun addEvent(e: EventType): Long {
+        return insert(types, ContentValues().apply {
             this.put(color, e.color)
             this.put(text, e.text)
         })
@@ -178,15 +178,10 @@ class LocalRepo private constructor(context: Context): SQLiteOpenHelper(context,
         })
     }
 
-    fun getEventsTypes(b: Boundaries? = null): List<EventType> {
+    private fun getEventsTypes(): List<EventType> {
         val list = mutableListOf<EventType>()
         if (!db.isOpen) db = this.writableDatabase
-        val cur = db.rawQuery(
-            "SELECT * FROM $types${
-                if (b == null) "" else " WHERE $date BETWEEN ${b.start} AND ${b.end}"
-            }",
-            null
-        )
+        val cur = db.rawQuery("SELECT * FROM $types", null)
         if (cur.moveToFirst()) {
             do {
                 list.add(
@@ -243,5 +238,54 @@ class LocalRepo private constructor(context: Context): SQLiteOpenHelper(context,
 
     fun deleteEvent(e: EventEntry) {
         delete(entries, e.id)
+    }
+
+
+    // TEMPLATE POSITIONS (I don't want to modify existing db, so new table will handle this)
+    private fun tryCreatePosTable(withClean: Boolean = false) {
+        if (!db.isOpen) db = this.writableDatabase
+        db.execSQL("CREATE TABLE IF NOT EXISTS $positions ($typeId INTEGER, $position INTEGER)")
+        if (withClean) {
+            db.execSQL("DELETE FROM $positions")
+        }
+    }
+
+    private fun getPositions(): List<Pair<Int, Int>> {
+        val list = mutableListOf<Pair<Int, Int>>()
+        val cur = db.rawQuery("SELECT * FROM $positions", null)
+        if (cur.moveToFirst()) {
+            do {
+                list.add(Pair(cur.getInt(0), cur.getInt(1)))
+            } while (cur.moveToNext())
+        }
+        cur.close()
+        return list
+    }
+
+    fun getSortedEventsTypes(): List<EventType> {
+        tryCreatePosTable()
+        val posList = getPositions()
+        return getEventsTypes().sortedBy { e ->
+            posList.find { p -> p.first == e.id }?.second ?: e.id
+        }
+    }
+
+    fun addNewPosition(lastId: Long) {
+        tryCreatePosTable()
+        val newPos = getPositions().maxByOrNull { it.second }?.second?.plus(1) ?: 0
+        insert(positions, ContentValues().apply {
+            this.put(typeId, lastId)
+            this.put(position, newPos)
+        })
+    }
+
+    fun replacePositions(newPos: List<Pair<Int, Int>>) {
+        tryCreatePosTable(true)
+        newPos.forEach {
+            insert(positions, ContentValues().apply {
+                this.put(typeId, it.first)
+                this.put(position, it.second)
+            })
+        }
     }
 }

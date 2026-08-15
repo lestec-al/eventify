@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,31 +22,33 @@ import com.lestec.eventify.ui.MainViewModel
 fun AboutApp(vm: MainViewModel) {
     val context = LocalContext.current
 
-    Text(
-        text = vm.getAppVersion(context),
-        modifier = Modifier
-            .padding(horizontal = 20.dp, vertical = 10.dp)
-            .fillMaxWidth(),
-        fontWeight = FontWeight.SemiBold,
-        style = MaterialTheme.typography.bodyLarge
-    )
-    Text(
-        text = stringResource(R.string.privacy_policy),
-        modifier = Modifier
-            .clickable { vm.openLink(context, R.string.privacy_link) }
-            .padding(horizontal = 20.dp, vertical = 10.dp)
-            .fillMaxWidth(),
-        textDecoration = TextDecoration.Underline,
-        style = MaterialTheme.typography.bodyLarge
-    )
-    Text(
-        text = stringResource(R.string.support),
-        modifier = Modifier
-            .clickable { vm.openLink(context, R.string.email_link) }
-            .padding(horizontal = 20.dp, vertical = 10.dp)
-            .fillMaxWidth(),
-        textDecoration = TextDecoration.Underline,
-        style = MaterialTheme.typography.bodyLarge
-    )
-    Spacer(Modifier.height(5.dp))
+    ElevatedCard(modifier = Modifier.padding(horizontal = 10.dp)) {
+        Text(
+            text = vm.getAppVersion(context),
+            modifier = Modifier
+                .padding(horizontal = 20.dp, vertical = 10.dp)
+                .fillMaxWidth(),
+            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.bodyLarge
+        )
+        Text(
+            text = stringResource(R.string.privacy_policy),
+            modifier = Modifier
+                .clickable { vm.openLink(context, R.string.privacy_link) }
+                .padding(horizontal = 20.dp, vertical = 10.dp)
+                .fillMaxWidth(),
+            textDecoration = TextDecoration.Underline,
+            style = MaterialTheme.typography.bodyLarge
+        )
+        Text(
+            text = stringResource(R.string.support),
+            modifier = Modifier
+                .clickable { vm.openLink(context, R.string.email_link) }
+                .padding(horizontal = 20.dp, vertical = 10.dp)
+                .fillMaxWidth(),
+            textDecoration = TextDecoration.Underline,
+            style = MaterialTheme.typography.bodyLarge
+        )
+        Spacer(Modifier.height(5.dp))
+    }
 }

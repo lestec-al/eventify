@@ -14,3 +14,7 @@ fun Long.formatMillsDate(context: Context): String = DateFormat
 fun Long.formatMillsTime(context: Context): String = DateFormat
     .getTimeFormat(context)
     .format(this)
+
+fun IntRange.overlaps(other: IntRange): Boolean {
+    return this.first <= other.last && other.first <= this.last
+}

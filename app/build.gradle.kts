@@ -12,8 +12,8 @@ android {
         applicationId = "com.lestec.eventify"
         minSdk = 26
         targetSdk = 37
-        versionCode = 6
-        versionName = "0.6"
+        versionCode = 7
+        versionName = "0.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -52,7 +52,6 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
 //    testImplementation(libs.junit)
 //    androidTestImplementation(libs.androidx.junit)

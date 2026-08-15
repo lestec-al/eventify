@@ -6,9 +6,6 @@ import android.text.format.DateFormat
 import androidx.activity.result.ActivityResult
 import androidx.activity.compose.ManagedActivityResultLauncher as Launcher
 import androidx.compose.foundation.pager.PagerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.getValue
@@ -62,7 +59,24 @@ class MainViewModel(
         private set
     var whatIsCreated by mutableStateOf(CreatedType.Type)
         private set
-    fun updateEditSheetOpen(
+
+    fun moveType(eventIndex: Int, targetIdx: Int) {
+        if (targetIdx >= 0 && targetIdx < eventTypes.size) {
+            val thisEvent = eventTypes[eventIndex]
+            val targetEvent = eventTypes[targetIdx]
+
+            eventTypes = eventTypes.map {
+                when (it.id) {
+                    thisEvent.id -> targetEvent
+                    targetEvent.id -> thisEvent
+                    else -> it
+                }
+            }
+            repo.replacePositions(eventTypes.mapIndexed { idx, it -> Pair(it.id, idx) })
+        }
+    }
+
+    fun updateEditSheet(
         sheetOpen: Boolean = false,
         whatIsCreated: CreatedType = CreatedType.Type,
         eventType: EventType? = null
@@ -71,6 +85,7 @@ class MainViewModel(
         this.editedEventType = eventType
         this.whatIsCreated = whatIsCreated
         if (sheetOpen) {
+            this.textError = false
             this.textValue = eventType?.text ?: ""
             this.redColor = eventType?.color?.let { Color(it).toArgb().red } ?: Random.nextInt(256)
             this.greenColor = eventType?.color?.let { Color(it).toArgb().green } ?: Random.nextInt(256)
@@ -80,9 +95,9 @@ class MainViewModel(
 
     fun deleteEditedEventType() {
         repo.deleteEvent(editedEventType!!)
-        eventTypes = repo.getEventsTypes()
+        eventTypes = repo.getSortedEventsTypes()
         isDelDialogOpen = false
-        updateEditSheetOpen()
+        updateEditSheet()
         get3MonthsData(editedCalendar, null)
     }
 
@@ -138,17 +153,22 @@ class MainViewModel(
                         color = color,
                         text = text
                     )
-                    if (editedEventType != null) repo.updateEvent(it) else repo.addEvent(it)
-                    eventTypes = repo.getEventsTypes()
+                    if (editedEventType != null) {
+                        repo.updateEvent(it)
+                    } else {
+                        val lastId = repo.addEvent(it)
+                        repo.addNewPosition(lastId)
+                    }
+                    eventTypes = repo.getSortedEventsTypes()
                     viewModelScope.launch {
                         get3MonthsDataSuspend(editedCalendar, null)
-                        updateEditSheetOpen()
+                        updateEditSheet()
                     }
                 }
                 CreatedType.Entry -> {
                     createEventEntry(typeId = -1, color = color, text = text)
                     updateCardItemsOpen()
-                    updateEditSheetOpen()
+                    updateEditSheet()
                 }
             }
         }
@@ -388,8 +408,13 @@ class MainViewModel(
         }
     }
 
+    fun getDateTime(firstPart: String, context: Context): String {
+        val mills = daySheetDate.timeInMillis
+        return "$firstPart ${mills.formatMillsDate(context)}, ${mills.formatMillsTime(context)}"
+    }
+
     init {
-        eventTypes = repo.getEventsTypes()
+        eventTypes = repo.getSortedEventsTypes()
         get3MonthsData(today, null)
     }
 
@@ -402,14 +427,9 @@ class MainViewModel(
     var askDialogAction: Int? by mutableStateOf(null)
         private set
 
-    val dataSettings = listOf(
-        Setting(text = R.string.import_db, icon = Icons.Default.FileDownload) { _, _ ->
-            setAskDialog(true, R.string.import_db)
-        },
-        Setting(text = R.string.export_db, icon = Icons.Default.FileUpload) { _, launcher ->
-            storageRepo.exportDb(launcher)
-        }
-    )
+    fun exportDb(launcher: Launcher<Intent, ActivityResult>) {
+        storageRepo.exportDb(launcher)
+    }
 
     fun getAppVersion(context: Context): String {
         return try {
@@ -438,7 +458,7 @@ class MainViewModel(
         isLoading = true
         storageRepo.resultImportDb(result, repo::import)
         delay(1.seconds)
-        eventTypes = repo.getEventsTypes()
+        eventTypes = repo.getSortedEventsTypes()
         get3MonthsData(today, null)
         isLoading = false
     }
@@ -447,12 +467,5 @@ class MainViewModel(
         isLoading = true
         storageRepo.resultExportDb(result) { repo.export().toString() }
         isLoading = false
-    }
-
-
-    // OTHERS
-    fun getDateTime(firstPart: String, context: Context): String {
-        val mills = daySheetDate.timeInMillis
-        return "$firstPart ${mills.formatMillsDate(context)}, ${mills.formatMillsTime(context)}"
     }
 }

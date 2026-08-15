@@ -12,8 +12,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.lestec.eventify.R
 
@@ -22,7 +22,7 @@ fun RowScope.ColoredBox(
     onClick: () -> Unit,
     color: Color?,
     isSelected: Boolean = true,
-    icon: ImageVector = Icons.Default.Check
+    iconId: Int? = null
 ) {
     Button(
         onClick = onClick,
@@ -37,7 +37,12 @@ fun RowScope.ColoredBox(
             .weight(1f)
     ) {
         if (isSelected) {
-            Icon(icon, LocalContext.current.getString(R.string.color))
+            val colorStr = LocalContext.current.getString(R.string.color)
+            if (iconId != null) {
+                Icon(painterResource(iconId), colorStr)
+            } else {
+                Icon(Icons.Default.Check, colorStr)
+            }
         }
     }
 }

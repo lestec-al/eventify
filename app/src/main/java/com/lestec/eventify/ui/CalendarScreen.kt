@@ -21,8 +21,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,10 +46,12 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import com.lestec.eventify.R
 import com.lestec.eventify.ui.sheets.TypesSheet
 import com.lestec.eventify.ui.sheets.DaySheet
 import com.lestec.eventify.ui.sheets.EditSheet
@@ -158,7 +158,7 @@ fun CalendarScreen(
                         onClick = {},
                         interactionSource = interactionSource
                     ) {
-                        Icon(Icons.Default.EditCalendar, null)
+                        Icon(painterResource(R.drawable.ic_edit_calendar), null)
                     }
                     // Settings button
                     IconButton(onClick = onSettings) {
@@ -175,7 +175,7 @@ fun CalendarScreen(
                     vm.updateCardItemsOpen(true)
                 }
             ) {
-                Icon(Icons.Default.Add, null)
+                Icon(painterResource(R.drawable.ic_add_task), null)
             }
         },
         modifier = Modifier.fillMaxSize()

@@ -6,12 +6,12 @@
     <string name="email_link" translatable="false">mailto:alexyurgel@gmail.com</string>
 
     <string name="color">Color</string>
-    <string name="delete_info">This event template will be deleted</string>
+    <string name="delete_template_info">This template will be deleted</string>
     <string name="add_template_info">Tap + to add template</string>
     <string name="add_entry_info">Tap + to add entry</string>
     <string name="name">Name</string>
-    <string name="event_name_error">Enter a name for your event</string>
-    <string name="event_templates">Event templates</string>
+    <string name="name_error">Enter a name</string>
+    <string name="templates">Templates</string>
     <string name="settings">Settings</string>
     <string name="export_db">Export data to the device</string>
     <string name="import_db">Import data from the device</string>

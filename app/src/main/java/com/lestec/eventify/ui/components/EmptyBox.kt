@@ -11,15 +11,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun EmptyBox(
     text: String,
-    iconId: ImageVector,
+    iconId: Int,
     text2: String? = null,
-    iconId2: ImageVector? = null,
+    iconId2: Int? = null,
 ) {
     val color = MaterialTheme.colorScheme.outline
     val isTwoRows = text2 != null && iconId2 != null
@@ -44,7 +44,7 @@ fun EmptyBox(
                         color = color
                     )
                     Icon(
-                        imageVector = it.second,
+                        painter = painterResource(it.second),
                         contentDescription = null,
                         tint = color
                     )

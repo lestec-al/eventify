@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="color">Цвет</string>
-    <string name="delete_info">Этот шаблон события будет удалён</string>
+    <string name="delete_template_info">Этот шаблон будет удалён</string>
     <string name="add_template_info">Нажмите +, чтобы добавить шаблон</string>
     <string name="add_entry_info">Нажмите +, чтобы добавить запись</string>
     <string name="name">Название</string>
-    <string name="event_name_error">Введите название события</string>
-    <string name="event_templates">Шаблоны событий</string>
+    <string name="name_error">Введите название</string>
+    <string name="templates">Шаблоны</string>
     <string name="settings">Настройки</string>
     <string name="export_db">Экспорт данных на устройство</string>
     <string name="import_db">Импорт данных с устройства</string>

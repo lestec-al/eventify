@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Done
-import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,12 +34,12 @@ fun EditSheet(vm: MainViewModel) {
     if (vm.editSheetOpen) {
         AskDialog(
             visible = vm.isDelDialogOpen,
-            text = stringResource(R.string.delete_info),
+            text = stringResource(R.string.delete_template_info),
             confirmButtonCLicked = vm::deleteEditedEventType,
             cancelClicked = vm::delDialogUpdate
         )
         BaseSheet(
-            onDismiss = vm::updateEditSheetOpen,
+            onDismiss = vm::updateEditSheet,
             title = stringResource(
                 if (vm.whatIsCreated == CreatedType.Entry) R.string.add_entry else {
                     if (vm.editedEventType != null) R.string.edit_template else R.string.add_template
@@ -49,7 +48,9 @@ fun EditSheet(vm: MainViewModel) {
             titleActionsRight = {
                 (1..2).forEach {
                     if (it == 2 || (it == 1 && vm.editedEventType != null)) {
-                        IconButton(onClick = if (it == 1) {{ vm.delDialogUpdate(true) }} else vm::editSheetOnSave) {
+                        IconButton(onClick = {
+                            if (it == 1) vm.delDialogUpdate(true) else vm.editSheetOnSave()
+                        }) {
                             Icon(
                                 imageVector = if (it == 1) Icons.Outlined.Delete else Icons.Outlined.Done,
                                 contentDescription = if (it == 1) "delete" else "save"
@@ -68,7 +69,7 @@ fun EditSheet(vm: MainViewModel) {
                 },
                 supportingText = {
                     Text(
-                        text = if (vm.textError) stringResource(R.string.event_name_error) else "",
+                        text = if (vm.textError) stringResource(R.string.name_error) else "",
                         color = MaterialTheme.colorScheme.error
                     )
                 },
@@ -108,7 +109,7 @@ fun EditSheet(vm: MainViewModel) {
                     ColoredBox(
                         onClick = vm::createRandomColor,
                         color = null,
-                        icon = Icons.Outlined.Shuffle
+                        iconId = R.drawable.ic_shuffle
                     )
                 }
                 listOf('r', 'g', 'b').forEach { i ->
