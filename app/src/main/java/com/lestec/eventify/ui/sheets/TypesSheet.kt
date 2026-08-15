@@ -32,9 +32,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -52,6 +54,7 @@ import kotlin.math.roundToInt
 @Composable
 fun TypesSheet(vm: MainViewModel) {
     if (vm.cardItemsOpen) {
+        val haptic = LocalHapticFeedback.current
         val addTaskIcon = painterResource(R.drawable.ic_add_task)
         val lazyState = rememberLazyListState()
         var openedPref by remember { mutableStateOf<Int?>(null) }
@@ -129,6 +132,7 @@ fun TypesSheet(vm: MainViewModel) {
                                     onLongPress = {
                                         if (openedPref == null || openedPref != idx) {
                                             openedPref = idx
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         }
                                         vm.viewModelScope.launch {
                                             press?.also { p ->
