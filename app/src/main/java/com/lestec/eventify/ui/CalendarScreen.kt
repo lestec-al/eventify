@@ -3,6 +3,7 @@ package com.lestec.eventify.ui
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -20,8 +21,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -162,7 +161,7 @@ fun CalendarScreen(
                     }
                     // Settings button
                     IconButton(onClick = onSettings) {
-                        Icon(Icons.Default.Settings, null)
+                        Icon(painterResource(R.drawable.ic_settings), null)
                     }
                 }
             )
@@ -218,63 +217,62 @@ fun CalendarScreen(
                         }
                 ) {
                     items(items = month.days) {
-                        Box(
+                        Column(
                             modifier = Modifier
                                 .height(itemHeightDp)
                                 .padding(2.dp)
                                 .clip(shape)
                                 .background(color)
+                                .then(
+                                    if (!it.isToday) Modifier else {
+                                        Modifier.border(
+                                            width = 1.dp,
+                                            color = if (isSystemInDarkTheme()) {
+                                                Color.White
+                                            } else {
+                                                Color.Black
+                                            },
+                                            shape = shape
+                                        )
+                                    }
+                                )
                                 .clickable {
                                     vm.setIsShowDayDialog(true, it)
                                 },
-                            contentAlignment = Alignment.TopCenter
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                // Day number
+                            // Day number
+                            Text(
+                                text = it.dayNumber,
+                                modifier = Modifier
+                                    .padding(horizontal = 8.dp)
+                                    .fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                color = if (it.isThisMonth) {
+                                    Color.Unspecified
+                                } else {
+                                    MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
+                                }
+                            )
+                            // Stats for the specific day
+                            it.listOfStats.forEach { it1 ->
+                                val text = it1.text
+                                val height = TextUnit(10f, TextUnitType.Sp)
                                 Text(
-                                    text = it.dayNumber,
+                                    text = if ((text.length > 4)) text.substring(0, 4) else text,
                                     modifier = Modifier
-                                        .padding(horizontal = 8.dp)
+                                        .padding(vertical = 0.5.dp)
                                         .fillMaxWidth()
                                         .background(
-                                            color = if (it.isToday) {
-                                                MaterialTheme.colorScheme.onBackground
-                                            } else {
-                                                Color.Transparent
-                                            },
-                                            shape = CardDefaults.shape
+                                            color = Color(it1.color),
+                                            shape = shape
                                         ),
                                     textAlign = TextAlign.Center,
-                                    color = if (it.isToday) {
-                                        if (isSystemInDarkTheme()) Color.Black else Color.White
-                                    } else {
-                                        if (it.isThisMonth) {
-                                            Color.Unspecified
-                                        } else {
-                                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
-                                        }
-                                    }
+                                    color = if (it1.color == Color.White.toArgb()) Color.Black else Color.White,
+                                    fontSize = height,
+                                    lineHeight = height,
+                                    style = MaterialTheme.typography.bodySmall
                                 )
-                                // Stats for the specific day
-                                it.listOfStats.forEach { it1 ->
-                                    val text = it1.text
-                                    val height = TextUnit(10f, TextUnitType.Sp)
-                                    Text(
-                                        text = if ((text.length > 4)) text.substring(0, 4) else text,
-                                        modifier = Modifier
-                                            .padding(vertical = 0.5.dp)
-                                            .fillMaxWidth()
-                                            .background(
-                                                color = Color(it1.color),
-                                                shape = shape
-                                            ),
-                                        textAlign = TextAlign.Center,
-                                        color = if (it1.color == Color.White.toArgb()) Color.Black else Color.White,
-                                        fontSize = height,
-                                        lineHeight = height,
-                                        style = MaterialTheme.typography.bodySmall
-                                    )
-                                }
                             }
                         }
                     }

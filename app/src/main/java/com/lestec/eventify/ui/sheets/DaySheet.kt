@@ -16,9 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -97,7 +94,7 @@ fun DaySheet(vm: MainViewModel) {
                             shape = CardDefaults.shape,
                             modifier = Modifier.padding(15.dp)
                         ) {
-                            Icon(Icons.Outlined.Check, "ok")
+                            Icon(painterResource(R.drawable.ic_check), "ok")
                         }
                     }
                 }
@@ -146,7 +143,7 @@ fun DaySheet(vm: MainViewModel) {
                             content = {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
-                                        imageVector = Icons.Outlined.Delete,
+                                        painter = painterResource(R.drawable.ic_delete),
                                         contentDescription = null,
                                         modifier = Modifier
                                             .padding(horizontal = 10.dp)
