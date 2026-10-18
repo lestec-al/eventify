@@ -32,11 +32,10 @@ class StorageRepo(val context: Context) {
     }
 
     fun resultImportDb(result: ActivityResult, importDB: (String) -> Boolean) {
-        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+        val uri = result.data?.data
+        if (result.resultCode == Activity.RESULT_OK && uri != null) {
             try {
-                val `is`: InputStream? = context.contentResolver.openInputStream(
-                    Objects.requireNonNull<Uri?>(result.data!!.data)
-                )
+                val `is`: InputStream? = context.contentResolver.openInputStream(uri)
                 val `in` = BufferedReader(InputStreamReader(`is`, StandardCharsets.UTF_8))
                 var inputLine: String?
                 val response = StringBuilder()

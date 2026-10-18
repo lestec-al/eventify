@@ -12,11 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,9 +27,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lestec.eventify.R
 import com.lestec.eventify.ui.components.BaseSheet
 import com.lestec.eventify.ui.upperFirstChar
 import java.util.Calendar
@@ -77,11 +74,11 @@ fun DatePickerSheet(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onReset) {
-                        Icon(Icons.Outlined.Refresh, "reset")
+                        Icon(painterResource(R.drawable.ic_refresh), "reset")
                     }
                     Spacer(Modifier.weight(1f))
                     IconButton(onClick = { year-- }) {
-                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, null)
+                        Icon(painterResource(R.drawable.ic_keyboard_arrow_left), null)
                     }
                     Text(
                         modifier = Modifier.padding(horizontal = 10.dp),
@@ -90,11 +87,11 @@ fun DatePickerSheet(
                         fontWeight = FontWeight.Bold
                     )
                     IconButton(onClick = { year++ }) {
-                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null)
+                        Icon(painterResource(R.drawable.ic_keyboard_arrow_right), null)
                     }
                     Spacer(Modifier.weight(1f))
                     IconButton(onClick = { onConfirm(months.indexOf(month), year) }) {
-                        Icon(Icons.Outlined.Check, "ok")
+                        Icon(painterResource(R.drawable.ic_check), "ok")
                     }
                 }
             }

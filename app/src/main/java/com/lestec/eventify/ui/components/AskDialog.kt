@@ -4,9 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -15,9 +12,11 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.lestec.eventify.R
 
 @Composable
 fun AskDialog(
@@ -50,7 +49,7 @@ fun AskDialog(
                             .padding(horizontal = 5.dp)
                             .weight(1f)
                     ) {
-                        Icon(Icons.Outlined.Close, "close")
+                        Icon(painterResource(R.drawable.ic_close), "close")
                     }
                     OutlinedButton(
                         onClick = confirmButtonCLicked,
@@ -59,7 +58,7 @@ fun AskDialog(
                             .padding(horizontal = 5.dp)
                             .weight(1f)
                     ) {
-                        Icon(Icons.Outlined.Check, "ok")
+                        Icon(painterResource(R.drawable.ic_check), "ok")
                     }
                 }
             }
